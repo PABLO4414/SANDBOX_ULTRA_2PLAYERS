@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTIMATE POWDER BOX V8 - CARNAGE ONLINE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020205;
+            color: #00ffcc;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        h1 { font-size: 16px; margin-bottom: 8px; text-align: center; text-shadow: 0 0 10px #ff00ff; }
+
+        #nameOverlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.94);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
+        }
+        #nameOverlay div.t { font-size: 13px; margin-bottom: 20px; text-shadow: 0 0 8px #ff00ff; }
+        #nameOverlay input {
+            font-family: 'Press Start 2P', cursive; padding: 8px; font-size: 11px; margin-bottom: 15px;
+            background: #111; color: #00ffcc; border: 2px solid #333; text-align: center;
+        }
+        #nameOverlay button {
+            font-family: 'Press Start 2P', cursive; padding: 10px 22px; font-size: 10px;
+            background: #00ffcc; color: #000; border: none; cursor: pointer;
+        }
+
+        .toolbar {
+            width: 100%; max-width: 1100px; display: flex; flex-wrap: wrap; gap: 6px;
+            align-items: center; justify-content: center; margin-bottom: 8px; background: #111;
+            padding: 8px; border: 2px solid #333; border-radius: 5px;
+        }
+        .toolbar button, .toolbar input {
+            font-family: 'Press Start 2P', cursive; font-size: 7px; padding: 6px; cursor: pointer;
+            background: #1a1a24; color: #fff; border: 2px solid #333;
+        }
+        .toolbar input { width: 80px; cursor: text; }
+        .toolbar button.on { background: #ff3355; border-color: #ff3355; }
+        #playerTag { color: #00ffcc; font-size: 8px; margin-right: 6px; }
+
+        .controls-wrapper {
+            width: 100%; max-width: 1100px; background: #111; padding: 10px; border: 2px solid #333;
+            border-radius: 5px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); margin-bottom: 10px;
+            max-height: 260px; overflow-y: auto;
+        }
+        .controls-wrapper::-webkit-scrollbar { width: 8px; }
+        .controls-wrapper::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        .controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 4px; }
+
+        button {
+            background-color: #1a1a24; color: #ffffff; border: 2px solid #333; padding: 6px 2px;
+            font-size: 7px; cursor: pointer; font-family: 'Press Start 2P', cursive; transition: 0.1s;
+        }
+        button:hover { filter: brightness(1.3); }
+        button:active { transform: scale(0.9); }
+        button.active { box-shadow: 0 0 10px currentColor; font-weight: bold; background-color: #333; }
+
+        #canvas-container { position: relative; }
+        canvas {
+            background-color: #020205; border: 4px solid #333; box-shadow: 0 0 30px rgba(0, 255, 204, 0.25);
+            cursor: none; image-rendering: pixelated;
+        }
+        #flash-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: white; opacity: 0; pointer-events: none; z-index: 9999;
+        }
+        .hud { margin-top: 5px; font-size: 9px; color: #ffeb3b; text-align: center; line-height: 1.6; max-width: 800px; }
+        .hud span { color: #00ffcc; }
+        .hud b { color: #ff4444; }
+    </style>
+</head>
+<body>
+
+    <div id="nameOverlay">
+        <div class="t">INGRESA TU NOMBRE</div>
+        <input id="nameInput" maxlength="12" placeholder="Jugador">
+        <button id="nameSubmit">JUGAR</button>
+    </div>
+
+    <h1>[ ULTIMATE POWDER BOX V12 · 200 ELEMENTOS · MEGA ÉPICO ]</h1>
+
+    <div class="toolbar">
+        <span id="playerTag">Jugador</span>
+        <button id="physicsToggle">FÍSICA EXAGERADA: OFF</button>
+        <span style="font-size:7px;">🌡️ TEMPERATURA: <input id="tempSlider" type="range" min="-20" max="120" step="1" value="20" style="width:90px; vertical-align:middle;"> <span id="tempValue">20°C</span></span>
+        <span style="font-size:7px;">HORA: <input id="timeSlider" type="range" min="0" max="24" step="0.5" value="12" style="width:70px; vertical-align:middle;"></span>
+        <span style="font-size:7px;">ALTURA VOLCÁN: <input id="volcanoHeightInput" type="number" min="5" max="60" value="15" style="width:40px;"></span>
+    </div>
+    <div class="toolbar">
+        <button id="rainToggle">🌧️ LLUVIA: OFF</button>
+        <button id="thunderToggle">⚡ TRUENOS: OFF</button>
+        <button id="alienToggle">👽 INVASIÓN ALIEN: OFF</button>
+        <button id="heliToggle">🚁 HELICÓPTERO: OFF</button>
+        <button id="nukeBtn">☢ BOMBA NUCLEAR</button>
+    </div>
+
+    <div class="controls-wrapper">
+        <div class="controls" id="btn-container"></div>
+    </div>
+
+    <div class="toolbar">
+        <span style="font-size:8px; color:#00ffcc;">🎵 MÚSICA DE FONDO:</span>
+        <input type="file" id="musicFileInput" accept="audio/*">
+        <button id="musicPlayBtn">▶️ PLAY</button>
+        <button id="musicStopBtn">⏹️ STOP</button>
+        <input id="musicVolume" type="range" min="0" max="100" value="50" style="width:80px; vertical-align:middle;">
+        <span id="musicName" style="font-size:7px; color:#ffeb3b;"></span>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+    </div>
+
+    <div class="hud">
+        200 elementos (30 de la tabla periódica + 20 nuevos) · ~75 fusiones distintas · Stickman blanco de 2 piernas en arco (sin manos) · Sonido real (Web Audio) o sube tus propios archivos abajo del menú · Slider de temperatura que afecta reacciones de verdad · Animales con detalle real (el pez no tiene patas, el ciempiés tiene muchas) · Agua y líquidos transparentes<br>
+        <span>TORNADO</span>, <span>METEORITO</span>, <span>RAYO_CONGEL.</span>, <span>VOLCÁN</span> y <span>DETONADOR</span> son eventos: clic y arrasan<br>
+        <b>Eventos de cielo:</b> Lluvia, Truenos, Invasión Alien (nave que dispara láser) y Helicóptero Bombardero (suelta bombas), todos con botón ON/OFF.
+    </div>
+
+    <div id="flash-screen"></div>
+
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const flashScreen = document.getElementById('flash-screen');
+
+        const cellSize = 4;
+        const cols = Math.floor(canvas.width / cellSize);
+        const rows = Math.floor(canvas.height / cellSize);
+
+        let grid = createGrid();
+        let currentElement = 1;
+        let isDrawing = false;
+        let shake = 0;
+        let blackHoles = [];
+        let tornadoes = [];
+        let meteors = [];
+        let gibs = [];
+        let creatures = [];
+        let exaggeratedPhysics = false;
+
+        function inBounds(x, y) { return x >= 0 && x < cols && y >= 0 && y < rows; }
+        function isEmpty(g, x, y) { return inBounds(x, y) && g[x][y].type === 0; }
+
+        // ===================== NOMBRE DEL JUGADOR =====================
+        let playerName = 'Jugador';
+        let myColor = '#00ffcc';
+        (function () {
+            const hues = ['#00ffcc', '#ff5588', '#ffcc00', '#88ff44', '#4488ff', '#ff8844'];
+            myColor = hues[Math.floor(Math.random() * hues.length)];
+        })();
+        document.getElementById('nameSubmit').onclick = () => {
+            let v = document.getElementById('nameInput').value.trim();
+            if (v) playerName = v.slice(0, 12);
+            document.getElementById('playerTag').textContent = playerName;
+            document.getElementById('nameOverlay').style.display = 'none';
+        };
+        document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('nameSubmit').click(); });
+
+        // ===================== JUGADOR (STICKMAN) =====================
+        let player = {
+            active: false, x: cols / 2, y: 10, vx: 0, vy: 0, hp: 100,
+            width: 2, height: 4, grounded: false, onFire: 0, parts: null
+        };
+        let keys = {};
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        function resetPlayerParts() {
+            player.parts = {
+                head: { dx: 0.5, dy: -1, w: 1, h: 1, attached: true, color: '#ffcc99' },
+                torso: { dx: 0.5, dy: 0, w: 0, h: 3.5, attached: true, color: '#eeeeee' },
+                legL: { dx: 0.3, dy: 3.5, w: 0, h: 1.6, attached: true, color: '#2244aa' },
+                legR: { dx: 0.7, dy: 3.5, w: 0, h: 1.6, attached: true, color: '#2244aa' }
+            };
+        }
+
+        // ===================== TABLA DE ELEMENTOS (130) =====================
+        const elementsData = {
+            0: { name: "BORRAR", color: ['#000000'] },
+            1: { name: "ARENA", color: ['#e6c55c', '#d4b34e'] },
+            2: { name: "AGUA", color: ['#4287f5', '#3a75d9'] },
+            3: { name: "MURO", color: ['#666666', '#555555'] },
+            4: { name: "FUEGO", color: ['#ff5500', '#ff7700'] },
+            5: { name: "LAVA", color: ['#ff3300', '#cc1100'] },
+            6: { name: "MADERA", color: ['#8b5a2b', '#754a22'] },
+            7: { name: "HIELO", color: ['#ccffff', '#b3f0ff'] },
+            8: { name: "PLANTA", color: ['#22cc22', '#1ea31e'] },
+            9: { name: "ACEITE", color: ['#c9b128', '#b39c1f'] },
+            10: { name: "RAYO", color: ['#fdfd96', '#ffffff'] },
+            11: { name: "ABONO", color: ['#3b5323', '#2c3f1a'] },
+            12: { name: "CRISTAL", color: ['#aaddff', '#8fcfff'] },
+            13: { name: "NEÓN", color: ['#ff0055', '#ff3377'] },
+            14: { name: "HELIO", color: ['#ffb6c1', '#ffc9d1'] },
+            15: { name: "SAL", color: ['#eeeeee', '#dddddd'] },
+            16: { name: "AZÚCAR", color: ['#f5f5dc', '#eae8cc'] },
+            17: { name: "CARAMELO", color: ['#8b4513', '#7a3c10'] },
+            18: { name: "MOVEDIZA", color: ['#cd853f', '#b8742f'] },
+            19: { name: "MECHA", color: ['#d2b48c', '#c2a377'] },
+            20: { name: "AGUA_SAL", color: ['#66b2ff', '#4fa0f5'] },
+            21: { name: "LÁSER", color: ['#ff0000', '#ff4444'] },
+            22: { name: "C4", color: ['#556b2f', '#465a26'] },
+            23: { name: "VENTILADOR", color: ['#778899', '#69798a'] },
+            24: { name: "SANGRE", color: ['#8a0303', '#6e0202'] },
+            25: { name: "GUSANO", color: ['#ffc0cb', '#ffaebc'] },
+            26: { name: "MERCURIO", color: ['#c0c0c0', '#a9a9a9'] },
+            27: { name: "ÁCIDO", color: ['#adff2f', '#9acd32'] },
+            28: { name: "CONCRETO", color: ['#9e9e9e', '#8a8a8a'] },
+            29: { name: "PÓLVORA", color: ['#4a4a4a', '#3a3a3a'] },
+            30: { name: "CENIZA", color: ['#5a5a5a', '#6e6e6e'] },
+            31: { name: "HUMO", color: ['#888888', '#aaaaaa'] },
+            32: { name: "VAPOR", color: ['#e0f7ff', '#cceeff'] },
+            33: { name: "NIEVE", color: ['#ffffff', '#eef7ff'] },
+            34: { name: "BARRO", color: ['#5c4033', '#4d342a'] },
+            35: { name: "PETRÓLEO", color: ['#1a1a1a', '#0e0e0e'] },
+            36: { name: "ESQUIRLA", color: ['#bfefff', '#a6e2ff'] },
+            37: { name: "ORO", color: ['#ffd700', '#e6c200'] },
+            38: { name: "DIAMANTE", color: ['#b9f2ff', '#9fe8ff'] },
+            39: { name: "VENENO", color: ['#7fff00', '#556b2f'] },
+            40: { name: "CÉSPED", color: ['#3ea832', '#358f2b'] },
+            41: { name: "TIERRA", color: ['#6b4423', '#5a3a1d'] },
+            42: { name: "MAGMA", color: ['#ff5e00', '#b32d00'] },
+            43: { name: "OBSIDIANA", color: ['#2b0033', '#1a0020'] },
+            44: { name: "ANTIMATERIA", color: ['#0a0014', '#7700ff'] },
+            45: { name: "MOHO", color: ['#6b8e23', '#5a7a1d'] },
+            46: { name: "ESPORAS", color: ['#c9a0dc', '#b98ccb'] },
+            47: { name: "RADIACTIVO", color: ['#39ff14', '#00ff88'] },
+            48: { name: "GAS_TÓXICO", color: ['#a1d600', '#7fae00'] },
+            49: { name: "CAUCHO", color: ['#1c1c1c', '#141414'] },
+            50: { name: "CERA", color: ['#f0e0b0', '#e0cf9a'] },
+            51: { name: "CHOCOLATE", color: ['#3f2010', '#33190c'] },
+            52: { name: "HIELO_SECO", color: ['#d8f8ff', '#c4efff'] },
+            53: { name: "AGUJERO_N", color: ['#8a2be2', '#7a20cc'] },
+            54: { name: "PLASMA", color: ['#00ffff', '#88ffff'] },
+            55: { name: "ECTOPLASMA", color: ['#a8ffcc', '#6effb0'] },
+            56: { name: "ÁMBAR", color: ['#e0952b', '#c98120'] },
+            57: { name: "PÁJARO", color: ['#5aa9e6', '#e6a45a'] },
+            58: { name: "PEZ", color: ['#ff8c42', '#e67a35'] },
+            59: { name: "RATA", color: ['#6e5849', '#5a473b'] },
+            60: { name: "ARAÑA", color: ['#1a1a1a', '#8a0303'] },
+            61: { name: "SERPIENTE", color: ['#3ea832', '#245c1c'] },
+            62: { name: "ESCORPIÓN", color: ['#c9820a', '#a86a08'] },
+            63: { name: "GRAVA", color: ['#7d7d7d', '#6a6a6a'] },
+            64: { name: "CARBÓN", color: ['#2b2b2b', '#1c1c1c'] },
+            65: { name: "AZUFRE", color: ['#e6d200', '#c9b700'] },
+            66: { name: "HUESO", color: ['#f0e6d2', '#ded1b7'] },
+            67: { name: "P.DIAMANTE", color: ['#dff7ff', '#bdeeff'] },
+            68: { name: "SEMILLA", color: ['#8a5a2a', '#734a20'] },
+            69: { name: "ARENA_ROJA", color: ['#c1440e', '#a8390c'] },
+            70: { name: "POLEN", color: ['#f5e642', '#e0d035'] },
+            71: { name: "SANGRE_NEGRA", color: ['#2b0000', '#1a0000'] },
+            72: { name: "LODO_TÓXICO", color: ['#4a5e1a', '#3a4a14'] },
+            73: { name: "NITRO", color: ['#e8ffb0', '#d4f090'] },
+            74: { name: "AGUA_BENDITA", color: ['#fff9c4', '#fff3a0'] },
+            75: { name: "ALQUITRÁN", color: ['#0d0d0d', '#050505'] },
+            76: { name: "LECHE", color: ['#fffef0', '#f5f3e0'] },
+            77: { name: "CIANURO", color: ['#c8ff00', '#a8d900'] },
+            78: { name: "PLASMA_SANGRE", color: ['#ff2e6d', '#e01f57'] },
+            79: { name: "NUBE_TORM.", color: ['#5a5a6e', '#48485a'] },
+            80: { name: "NIEBLA", color: ['#cfd8dc', '#bcc6cb'] },
+            81: { name: "GAS_INFLAM.", color: ['#ffcc66', '#e6b34f'] },
+            82: { name: "OZONO", color: ['#b0d9ff', '#96c9f5'] },
+            83: { name: "GAS_CONGEL.", color: ['#c0f0ff', '#a5e6ff'] },
+            84: { name: "CENIZA_VOLC.", color: ['#4a3a3a', '#3a2c2c'] },
+            85: { name: "ACERO", color: ['#b0b8c0', '#98a0a8'] },
+            86: { name: "LADRILLO", color: ['#a33b20', '#8c3119'] },
+            87: { name: "HUESO_SÓL.", color: ['#e8dcc0', '#d4c7a8'] },
+            88: { name: "CRISTAL_NEGRO", color: ['#141420', '#0a0a12'] },
+            89: { name: "ORO_SÓL.", color: ['#ffcf40', '#e6b82e'] },
+            90: { name: "ESPEJO", color: ['#e8f4ff', '#d0e8ff'] },
+            91: { name: "HIELO_ETERNO", color: ['#a0e8ff', '#88d9f5'] },
+            92: { name: "ROCA_LUNAR", color: ['#9aa0b0', '#84899a'] },
+            93: { name: "FLOR", color: ['#ff6fae', '#e6579a'] },
+            94: { name: "SETA", color: ['#d94040', '#c22e2e'] },
+            95: { name: "ENREDADERA", color: ['#2f7a2f', '#256325'] },
+            96: { name: "TNT", color: ['#cc2020', '#a81a1a'] },
+            97: { name: "METEORITO", color: ['#ff6600', '#993300'] },
+            98: { name: "TORNADO", color: ['#cccccc', '#999999'] },
+            100: { name: "GERMEN", color: ['#4a6b1a', '#3a5414'] },
+            101: { name: "BOMBA_RACIMO", color: ['#8a3a10', '#732f0c'] },
+            102: { name: "CONFETI", color: ['#ff4d4d', '#4d94ff'] },
+            103: { name: "POLVO_HUESO", color: ['#eee3cc', '#dcd0b5'] },
+            104: { name: "SERRÍN", color: ['#c9a066', '#b58e55'] },
+            105: { name: "ARENA_NEGRA", color: ['#2a2a2a', '#1e1e1e'] },
+            106: { name: "SAL_NEGRA", color: ['#333333', '#242424'] },
+            107: { name: "CRISTAL_ROTO", color: ['#cdeeff', '#b3e2ff'] },
+            108: { name: "GASOLINA", color: ['#e8c840', '#d1b32e'] },
+            109: { name: "SAVIA", color: ['#a87b3f', '#946a32'] },
+            110: { name: "JUGO_TÓXICO", color: ['#7bd400', '#69b400'] },
+            111: { name: "LAVA_NEGRA", color: ['#3a0a0a', '#1f0505'] },
+            112: { name: "AGUA_RADIACT.", color: ['#5cff5c', '#3fe63f'] },
+            113: { name: "GAS_RISA", color: ['#ffd9ec', '#ffc9e2'] },
+            114: { name: "VAPOR_ÁCIDO", color: ['#d4ff7a', '#c2f05e'] },
+            115: { name: "POLVO_ESTELAR", color: ['#e8d8ff', '#d6c0ff'] },
+            116: { name: "GAS_PLASMA", color: ['#ff77ff', '#e855e8'] },
+            117: { name: "TITANIO", color: ['#c8ccd4', '#b0b4bc'] },
+            118: { name: "MADERA_PODR.", color: ['#5a4a30', '#4a3d28'] },
+            119: { name: "CRISTAL_RUBÍ", color: ['#e0284a', '#c8203e'] },
+            120: { name: "HORMIGÓN", color: ['#87898c', '#75777a'] },
+            121: { name: "HUESO_FÓSIL", color: ['#c9b98a', '#b3a575'] },
+            122: { name: "CACTUS", color: ['#2e8b57', '#256e46'] },
+            123: { name: "HONGO_GIG.", color: ['#a8324a', '#8f2a3e'] },
+            124: { name: "LOBO", color: ['#5a5a5a', '#4a4a4a'] },
+            125: { name: "BUITRE", color: ['#3a3a3a', '#2a2a2a'] },
+            126: { name: "CIEMPIÉS", color: ['#8a5a2a', '#734a20'] },
+            127: { name: "MURCIÉLAGO", color: ['#2a2a2a', '#1a1a1a'] },
+            128: { name: "GRANADA", color: ['#3a4a2a', '#2c3a1f'] },
+            129: { name: "RAYO_CONGEL.", color: ['#a0e8ff', '#ffffff'] },
+            130: { name: "ARMA", color: ['#cccccc', '#999999'] },
+            131: { name: "CHISPAS", color: ['#ffff88', '#ffee44'] },
+            132: { name: "BOMBA_HUMO", color: ['#666677', '#55556a'] },
+            133: { name: "HIERRO", color: ['#8a8f96', '#767b82'] },
+            134: { name: "ÓXIDO", color: ['#a3441c', '#8c3a17'] },
+            135: { name: "HIERRO_OXID.", color: ['#7a3a1a', '#663012'] },
+            136: { name: "CARNE", color: ['#c9575a', '#b3494c'] },
+            137: { name: "CARNE_PODR.", color: ['#5a4a2a', '#4a3d22'] },
+            138: { name: "HUESO_CORR.", color: ['#6b6b3a', '#5a5a2e'] },
+            139: { name: "ASFALTO", color: ['#2a2a2e', '#1c1c1f'] },
+            140: { name: "DINAMITA", color: ['#c0392b', '#a53125'] },
+            141: { name: "MINA", color: ['#3a3a2a', '#2c2c20'] },
+            142: { name: "COHETE", color: ['#cccccc', '#aaaaaa'] },
+            143: { name: "BARRIL_EXPL.", color: ['#d4741a', '#b56215'] },
+            144: { name: "DETONADOR", color: ['#222222', '#111111'] },
+            145: { name: "NAPALM", color: ['#ff7700', '#dd5500'] },
+            146: { name: "FÓSFORO", color: ['#f0f0d0', '#e0e0b0'] },
+            147: { name: "GRANADA_FRAG", color: ['#2f3a2a', '#242c20'] },
+            148: { name: "CARGA_HUECA", color: ['#4a4a4a', '#3a3a3a'] },
+            149: { name: "BOMBA_SUCIA", color: ['#5a6b1a', '#4a5714'] },
+            150: { name: "ROCA", color: ['#6e6e6e', '#5c5c5c'] },
+            151: { name: "VOLCÁN", color: ['#8a3a20', '#732f19'] },
+            152: { name: "HIDRÓGENO", color: ['#eaffff', '#d5f5ff'] },
+            153: { name: "OXÍGENO", color: ['#aeefff', '#93e2ff'] },
+            154: { name: "NITRÓGENO", color: ['#d8d8ff', '#c2c2ff'] },
+            155: { name: "CARBONO", color: ['#1a1a1a', '#0d0d0d'] },
+            156: { name: "SODIO", color: ['#d8d0c0', '#c4bcac'] },
+            157: { name: "POTASIO", color: ['#c8b8e0', '#b3a0d0'] },
+            158: { name: "CALCIO", color: ['#e8e8d0', '#d6d6bc'] },
+            159: { name: "MAGNESIO", color: ['#e0e0e0', '#cfcfcf'] },
+            160: { name: "ALUMINIO", color: ['#c8ccd0', '#b4b8bc'] },
+            161: { name: "SILICIO", color: ['#6a6a7a', '#565664'] },
+            162: { name: "CLORO", color: ['#c8f0a0', '#b3e086'] },
+            163: { name: "ARGÓN", color: ['#e0d0ff', '#cdb8f5'] },
+            164: { name: "COBRE", color: ['#d2691e', '#b85a19'] },
+            165: { name: "ZINC", color: ['#a8adb5', '#93989f'] },
+            166: { name: "PLATA", color: ['#e0e0e6', '#c9c9d0'] },
+            167: { name: "PLATINO", color: ['#dcdce0', '#c6c6ca'] },
+            168: { name: "URANIO", color: ['#7cb342', '#679a34'] },
+            169: { name: "PLUTONIO", color: ['#4a6b1a', '#3a5414'] },
+            170: { name: "LITIO", color: ['#b8b8c0', '#a3a3ab'] },
+            171: { name: "FLÚOR", color: ['#e0ff70', '#ccf25a'] },
+            172: { name: "BROMO", color: ['#9a2020', '#801a1a'] },
+            173: { name: "YODO", color: ['#5a1a6b', '#481457'] },
+            174: { name: "NÍQUEL", color: ['#b0b0a0', '#9c9c8e'] },
+            175: { name: "CROMO", color: ['#c8c8d0', '#b3b3bc'] },
+            176: { name: "MANGANESO", color: ['#8a8a90', '#75757a'] },
+            177: { name: "COBALTO", color: ['#5a6ea0', '#495a85'] },
+            178: { name: "ESTAÑO", color: ['#a8a8ac', '#939396'] },
+            179: { name: "PLOMO", color: ['#4a4a52', '#3a3a41'] },
+            180: { name: "WOLFRAMIO", color: ['#3a3a3e', '#2a2a2d'] },
+            181: { name: "BARIO", color: ['#d0d0a0', '#bdbd8c'] },
+            182: { name: "CEMENTO", color: ['#9c9c94', '#88887f'] },
+            183: { name: "VIDRIO_BLIND.", color: ['#eaf6ff', '#d3ecff'] },
+            184: { name: "ESPUMA", color: ['#ffffff', '#eef2f5'] },
+            185: { name: "GEL_INFLAM.", color: ['#ff9933', '#e6821f'] },
+            186: { name: "ÁCIDO_FUERTE", color: ['#d4ff00', '#b8e000'] },
+            187: { name: "AGUA_PESADA", color: ['#2a5aa0', '#1f4a88'] },
+            188: { name: "ANTÍDOTO", color: ['#c0fff0', '#a3f5e2'] },
+            189: { name: "NIEVE_SUCIA", color: ['#c9c9b0', '#b3b39c'] },
+            190: { name: "BARRO_SECO", color: ['#7a5a3a', '#664a2e'] },
+            191: { name: "PIEDRA_CALIZA", color: ['#d8d0b8', '#c4bca4'] },
+            192: { name: "MÁRMOL", color: ['#e8e4dc', '#d4d0c6'] },
+            193: { name: "CUARZO", color: ['#e0c8ff', '#cbb0f0'] },
+            194: { name: "TURBA", color: ['#3a2e1a', '#2c2312'] },
+            195: { name: "RESINA", color: ['#c98a2e', '#b5791f'] },
+            196: { name: "ALGAS", color: ['#1a6b4a', '#155938'] },
+            197: { name: "CORAL", color: ['#ff6f6f', '#e65a5a'] },
+            198: { name: "PÓLVORA_NEGRA", color: ['#1c1c1c', '#101010'] },
+            199: { name: "MECHA_RÁPIDA", color: ['#e0b060', '#cc9c4a'] },
+            200: { name: "METAL_FUNDIDO", color: ['#ffb347', '#e69a30'] },
+            201: { name: "ESCORIA", color: ['#4a4038', '#392f29'] },
+            99: { name: "PLAYER", color: ['#ffffff'] }
+        };
+
+        // Categorías de comportamiento
+        const POWDERS = [1, 11, 15, 16, 18, 29, 30, 33, 37, 41, 47, 52, 63, 64, 65, 66, 67, 68, 69, 70, 84, 102, 103, 104, 105, 106, 107, 134, 136, 137, 138,
+            156, 157, 158, 159, 161, 168, 169, 170, 173, 177, 179, 181, 182, 189, 194, 198];
+        const LIQUIDS = [2, 5, 9, 17, 20, 24, 26, 27, 34, 35, 39, 42, 51, 55, 71, 72, 73, 74, 75, 76, 77, 78, 108, 109, 110, 111, 112, 145, 172,
+            184, 185, 186, 187, 188, 195, 200];
+        const VISCOUS_LIQUIDS = [5, 17, 42, 34, 75, 78, 109, 111, 145, 185, 195, 200];
+        const GASES = [13, 14, 31, 32, 46, 48, 79, 80, 81, 82, 83, 113, 114, 115, 116, 152, 153, 154, 162, 163, 171];
+        const DISSIPATING_GASES = [31, 32, 46, 48, 80, 83, 113, 114, 152, 162, 171];
+        const STATIC_SOLIDS = [3, 12, 28, 36, 38, 43, 49, 56, 85, 86, 87, 88, 89, 90, 91, 92, 117, 119, 120, 121, 135, 150,
+            155, 160, 164, 165, 166, 167, 174, 175, 176, 178, 180, 183, 190, 191, 192, 193, 197, 201];
+        const PLANTS = [8, 40, 45, 93, 94, 95, 100, 122, 123, 196];
+        const HAZARD_BURN = [4, 5, 21, 42, 54, 111, 116, 145, 200];
+        const HAZARD_POISON = [27, 39, 47, 48, 26, 36, 72, 77, 94, 110, 112, 114, 122, 123, 138, 162, 168, 169, 171, 172, 186, 189];
+        const GLOW_TYPES = [4, 5, 10, 13, 21, 42, 44, 47, 54, 79, 92, 111, 112, 115, 146, 168, 169, 175, 193, 200];
+        const DISSOLVABLE = [1, 6, 41, 28, 8, 11, 63, 64, 66, 69, 86, 118, 190, 191];
+        const IMMUNE_SOLIDS = [3, 85, 117, 120, 167, 180, 183];
+        const FIRE_SOURCES = [4, 5, 10, 21, 42, 54, 111, 116, 145, 200];
+        const NON_SEVER_HAZARDS = ['poison', 'bite'];
+        const EXPLOSIVE_TRIGGER_TYPES = [22, 140, 143, 147];
+        const METAL_TYPES = [36, 37, 85, 89, 107, 164, 165, 166, 174, 175, 176, 177, 178];
+
+        // Motor de datos: [A, B, resultadoParaA(o null), probabilidad, resultadoParaB(opcional)]
+        const FUSION_TABLE = [
+            [164, 2, 134, 0.006], [174, 27, 152, 0.04], [175, 27, 152, 0.03], [176, 27, 152, 0.04], [178, 27, 152, 0.05],
+            [179, 27, 72, 0.02], [164, 5, 26, 0.1], [174, 5, 26, 0.08], [178, 5, 26, 0.15], [176, 5, 26, 0.06], [179, 5, 26, 0.12], [160, 5, 26, 0.09],
+            [153, 152, 2, 0.05], [161, 153, 12, 0.04], [156, 162, 15, 0.15], [166, 162, 15, 0.1], [155, 153, 31, 0.05],
+            [171, 152, 48, 0.08], [162, 152, 48, 0.06],
+            [1, 5, 12, 0.03], [1, 42, 12, 0.03], [63, 5, 150, 0.02], [41, 5, 150, 0.015], [105, 5, 12, 0.03], [69, 5, 12, 0.03],
+            [24, 47, 71, 0.02], [136, 47, 137, 0.03], [66, 47, 138, 0.02], [8, 47, 45, 0.02], [40, 47, 94, 0.015],
+            [136, 5, 30, 0.1], [66, 5, 103, 0.08], [67, 5, 38, 0.02],
+            [92, 153, 115, 0.02], [37, 26, 89, 0.02],
+            [81, 153, 4, 0.02], [116, 153, 4, 0.02],
+            [72, 2, 34, 0.03], [77, 2, 2, 0.05], [110, 2, 2, 0.05], [71, 2, 24, 0.05],
+            [50, 5, 75, 0.1], [75, 83, 50, 0.03],
+            [33, 83, 91, 0.02], [7, 83, 91, 0.015], [91, 5, 2, 0.01],
+            [45, 153, 94, 0.01], [100, 27, 0, 0.1],
+            [89, 10, 131, 0.05], [107, 153, 12, 0.03], [26, 52, 178, 0.02],
+            [168, 153, 47, 0.02], [159, 153, 4, 0.05], [156, 153, 4, 0.03], [157, 153, 4, 0.03], [170, 153, 4, 0.03],
+            [16, 153, 4, 0.01], [70, 153, 4, 0.02], [104, 153, 4, 0.03], [64, 153, 4, 0.02], [29, 153, 4, 0.04],
+            [145, 153, 4, 0.03], [146, 153, 4, 0.05], [9, 153, 4, 0.01], [35, 153, 4, 0.01], [108, 153, 4, 0.02], [19, 153, 4, 0.02],
+            [179, 47, null, 0.05, 30], [66, 72, 138, 0.03], [136, 72, 137, 0.03],
+            [93, 47, 94, 0.01], [95, 47, 45, 0.01], [65, 153, 4, 0.03], [42, 153, 5, 0.02],
+            [190, 2, 34, 0.02], [192, 186, 0, 0.05], [193, 10, 54, 0.004]
+        ];
+        const FUSIONS_BY_A = {};
+        FUSION_TABLE.forEach(r => { if (!FUSIONS_BY_A[r[0]]) FUSIONS_BY_A[r[0]] = []; FUSIONS_BY_A[r[0]].push(r); });
+
+        let temperatureMode = true;
+        let ambientTemp = 20;
+        let dayTime = 12;
+        let volcanoHeight = 15;
+        let rainActive = false;
+        let thunderActive = false;
+        let rockets = [];
+
+        // ===================== ANIMALES (entidades reales, no partículas) =====================
+        const CREATURE_SPECIES = {
+            25: { speed: 0.35, mode: 'crawl', color: '#ffaebc', dark: '#e693a2', size: 1.1, noLegs: true, prey: true },
+            57: { speed: 0.9, mode: 'fly', color: '#5aa9e6', dark: '#3d8fd0', size: 1.3, prey: true },
+            58: { speed: 0.5, mode: 'swim', color: '#ff8c42', dark: '#e6752f', size: 1.1, finned: true, noLegs: true, prey: true },
+            59: { speed: 0.7, mode: 'crawl', color: '#6e5849', dark: '#584434', size: 1.3, tail: true, eatsWood: true, prey: true },
+            60: { speed: 1.0, mode: 'climb', color: '#1a1a1a', dark: '#000000', size: 1.2, legs4: true, bite: true, predator: true },
+            61: { speed: 0.55, mode: 'crawl', color: '#3ea832', dark: '#2c7a22', size: 1.6, noLegs: true, tail: true, poison: true, predator: true },
+            62: { speed: 0.45, mode: 'crawl', color: '#c9820a', dark: '#a86a08', size: 1.3, legs4: true, stinger: true, tail: true, poison: true, predator: true },
+            124: { speed: 1.3, mode: 'crawl', color: '#5a5a5a', dark: '#404040', size: 1.8, legs4: true, ears: true, tail: true, bite: true, predator: true },
+            125: { speed: 0.9, mode: 'fly', color: '#3a3a3a', dark: '#242424', size: 1.6, predator: true },
+            126: { speed: 0.8, mode: 'crawl', color: '#8a5a2a', dark: '#6e4620', size: 1.4, manyLegs: true, tail: true, prey: true },
+            127: { speed: 1.1, mode: 'fly', color: '#2a2a2a', dark: '#151515', size: 1.0, ears: true, bite: true, predator: true }
+        };
+        const CREATURE_TYPES = Object.keys(CREATURE_SPECIES).map(Number);
+
+        function spawnCreature(type, gx, gy) {
+            if (!CREATURE_SPECIES[type]) return;
+            creatures.push({ type: type, x: gx, y: gy, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, grounded: false });
+        }
+
+        function spawnBlood(gx, gy, n) {
+            for (let s = 0; s < n; s++) {
+                let sx = gx + Math.floor((Math.random() - 0.5) * 3), sy = gy + Math.floor((Math.random() - 0.5) * 3);
+                if (inBounds(sx, sy) && grid[sx][sy].type === 0) grid[sx][sy] = { type: 24, color: getTexture(24), life: 100 };
+            }
+        }
+
+        function updateCreatures() {
+            for (let ci = creatures.length - 1; ci >= 0; ci--) {
+                let c = creatures[ci];
+                let sp = CREATURE_SPECIES[c.type];
+                let gx = Math.floor(c.x), gy = Math.floor(c.y);
+
+                if (inBounds(gx, gy) && HAZARD_BURN.includes(grid[gx][gy].type)) {
+                    spawnBlood(gx, gy, 5);
+                    if (Math.random() < 0.5 && inBounds(gx, gy) && grid[gx][gy].type === 0) grid[gx][gy] = { type: 30, color: getTexture(30) };
+                    creatures.splice(ci, 1); continue;
+                }
+
+                // ---- IA: depredadores cazan al jugador, presas huyen ----
+                let toPlayer = null, distToPlayer = 9999;
+                if (player.active) {
+                    let pdx = (player.x + player.width / 2) - c.x, pdy = (player.y + player.height / 2) - c.y;
+                    distToPlayer = Math.hypot(pdx, pdy);
+                    toPlayer = pdx;
+                }
+                if (sp.predator && player.active && distToPlayer < 22) {
+                    c.dir = toPlayer > 0 ? 1 : -1;
+                    c.aggro = true;
+                } else if (sp.prey && player.active && distToPlayer < 6) {
+                    c.dir = toPlayer > 0 ? -1 : 1;
+                    c.aggro = false;
+                } else if (Math.random() < 0.012) {
+                    c.dir *= -1;
+                }
+                let chaseMult = (sp.predator && c.aggro) ? 1.7 : 1;
+
+                if (sp.mode === 'fly') {
+                    let targetVy = 0;
+                    if (sp.predator && player.active && distToPlayer < 22) targetVy = (player.y - c.y) > 0 ? 0.6 : -0.6;
+                    else targetVy = (Math.random() - 0.5) * 0.4;
+                    c.vy += (targetVy - c.vy) * 0.1;
+                    c.vy = Math.max(-1, Math.min(1, c.vy));
+                    c.x += c.dir * sp.speed * 0.6 * chaseMult;
+                    c.y += c.vy * 0.5;
+                    if (c.y < 1) { c.y = 1; c.vy = 0.2; }
+                    if (c.y > rows - 4) { c.y = rows - 4; c.vy = -0.2; }
+                } else if (sp.mode === 'swim') {
+                    let submerged = inBounds(gx, gy) && [2, 20].includes(grid[gx][gy].type);
+                    if (!submerged) { c.vy += 0.2; c.y += c.vy; }
+                    else { c.vy = 0; c.x += c.dir * sp.speed * 0.5; }
+                } else {
+                    c.vy += 0.3;
+                    let nx = c.x + c.dir * sp.speed * chaseMult;
+                    let ngx = Math.floor(nx);
+                    let blocked = inBounds(ngx, gy) && grid[ngx][gy].type !== 0 && grid[ngx][Math.max(0, gy - 1)].type !== 0;
+                    if (!blocked) c.x = nx; else c.dir *= -1;
+                    c.y += c.vy;
+                    let feetY = Math.floor(c.y + 1);
+                    if (inBounds(Math.floor(c.x), feetY) && grid[Math.floor(c.x)][feetY].type !== 0) {
+                        c.y = feetY - 1; c.vy = 0; c.grounded = true;
+                    } else { c.grounded = false; }
+                    if (sp.eatsWood && Math.random() < 0.008) {
+                        let wx = Math.floor(c.x) + c.dir, wy = Math.floor(c.y);
+                        if (inBounds(wx, wy) && grid[wx][wy].type === 6) grid[wx][wy] = { type: 0 };
+                    }
+                }
+
+                c.x = Math.max(0, Math.min(cols - 1, c.x));
+                c.y = Math.max(0, Math.min(rows - 1, c.y));
+
+                if (player.active && distToPlayer < 2.4) {
+                    if (sp.poison) applyHazardDamage('poison', 0.5);
+                    else if (sp.bite) applyHazardDamage('bite', 3.5);
+                }
+            }
+        }
+
+        function drawCreatures() {
+            for (let c of creatures) {
+                let sp = CREATURE_SPECIES[c.type];
+                let px = c.x * cellSize, py = c.y * cellSize;
+                let s = cellSize * (sp.size || 1);
+                let walk = (sp.mode === 'crawl' || sp.mode === 'climb') ? Math.sin(Date.now() / 130 + c.x * 3) * s * 0.35 : 0;
+
+                ctx.save();
+                ctx.translate(px, py);
+                if (c.dir < 0) ctx.scale(-1, 1);
+
+                // patas (pixel, animadas al caminar)
+                if (sp.manyLegs) {
+                    ctx.fillStyle = sp.dark || sp.color;
+                    for (let li = 0; li < 6; li++) {
+                        let lx = -s * 1.8 + li * s * 0.75;
+                        let lw = Math.sin(Date.now() / 100 + li) * s * 0.25;
+                        ctx.fillRect(lx, s * 0.4, s * 0.28, s * 0.9 + lw);
+                    }
+                } else if (!sp.noLegs) {
+                    ctx.fillStyle = sp.dark || sp.color;
+                    ctx.fillRect(-s * 1.1, s * 0.5 + walk * 0.4, s * 0.5, s * 0.9);
+                    ctx.fillRect(s * 0.3, s * 0.5 - walk * 0.4, s * 0.5, s * 0.9);
+                    if (sp.legs4) {
+                        ctx.fillRect(-s * 0.4, s * 0.5 - walk * 0.4, s * 0.5, s * 0.9);
+                        ctx.fillRect(s * 1.0, s * 0.5 + walk * 0.4, s * 0.5, s * 0.9);
+                    }
+                }
+
+                // cola
+                if (sp.tail) {
+                    ctx.fillStyle = sp.dark || sp.color;
+                    ctx.fillRect(-s * 2.1, -s * 0.1 + Math.sin(Date.now() / 150) * s * 0.15, s * 0.9, s * 0.5);
+                }
+
+                // aguijón
+                if (sp.stinger) {
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(-s * 2.6, -s * 0.5, s * 0.6, s * 0.4);
+                }
+
+                // aletas (pez)
+                if (sp.finned) {
+                    ctx.fillStyle = sp.dark || sp.color;
+                    ctx.fillRect(-s * 1.8, -s * 0.3, s * 0.9, s * 0.7);
+                    ctx.fillRect(-s * 0.2, s * 0.55, s * 0.6, s * 0.5);
+                }
+
+                // alas (voladores)
+                if (sp.mode === 'fly') {
+                    let flap = Math.abs(Math.sin(Date.now() / 90)) * s * 0.9;
+                    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+                    ctx.fillRect(-s * 0.4, -s * 0.5 - flap, s * 1.8, s * 0.6);
+                    ctx.fillStyle = sp.dark || sp.color;
+                    ctx.fillRect(-s * 0.4, -s * 0.5 - flap, s * 1.8, s * 0.15);
+                }
+
+                // cuerpo (pixel, 2 tonos)
+                ctx.fillStyle = sp.color;
+                ctx.fillRect(-s * 1.7, -s * 0.7, s * 3.4, s * 1.7);
+                ctx.fillStyle = sp.dark || sp.color;
+                ctx.fillRect(-s * 1.7, s * 0.5, s * 3.4, s * 0.5);
+
+                // cabeza
+                ctx.fillStyle = sp.color;
+                ctx.fillRect(s * 1.2, -s * 1.25, s * 1.5, s * 1.55);
+                // orejas
+                if (sp.ears) {
+                    ctx.fillStyle = sp.dark || sp.color;
+                    ctx.fillRect(s * 1.3, -s * 1.9, s * 0.35, s * 0.7);
+                    ctx.fillRect(s * 2.2, -s * 1.9, s * 0.35, s * 0.7);
+                }
+                // ojo
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(s * 2.0, -s * 0.9, s * 0.45, s * 0.45);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(s * 2.1, -s * 0.78, s * 0.22, s * 0.22);
+                if (sp.manyLegs || sp.predator) {
+                    ctx.fillStyle = '#c22';
+                    ctx.fillRect(s * 1.3, -s * 0.5, s * 0.7, s * 0.35);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        const btnContainer = document.getElementById('btn-container');
+        Object.keys(elementsData).forEach(id => {
+            let intId = parseInt(id);
+            if (intId !== 20 && intId !== 17) {
+                createBtn(intId);
+            }
+        });
+
+        function createBtn(id) {
+            let b = document.createElement('button');
+            b.id = `btn-${id}`;
+            b.innerText = elementsData[id].name;
+            let col = elementsData[id].color[0];
+            b.style.borderColor = col; b.style.color = col;
+            if (id === 99) { b.style.fontWeight = "bold"; b.style.borderColor = '#fff'; b.style.color = '#fff'; }
+            b.onclick = function () { setElement(id, this); };
+            if (id === 1) b.classList.add('active');
+            btnContainer.appendChild(b);
+        }
+
+        function createGrid() {
+            let arr = new Array(cols);
+            for (let i = 0; i < cols; i++) { arr[i] = new Array(rows).fill(null).map(() => ({ type: 0, color: '#000', life: 0 })); }
+            return arr;
+        }
+
+        function getTexture(type) {
+            if (type === 0 || !elementsData[type]) return '#000000';
+            const pal = elementsData[type].color;
+            return pal[Math.floor(Math.random() * pal.length)];
+        }
+
+        function setElement(type, btn) {
+            currentElement = type;
+            document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        }
+
+        // ===================== CURSOR =====================
+        // ===================== SONIDO (Web Audio, sin archivos) =====================
+        let actx = null;
+        function audioCtx() {
+            if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+            if (actx.state === 'suspended') actx.resume();
+            return actx;
+        }
+        function noiseBurst(duration, volume, filterFreq) {
+            const ac = audioCtx(); if (!ac) return;
+            const bufferSize = Math.floor(ac.sampleRate * duration);
+            const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+            const src = ac.createBufferSource(); src.buffer = buffer;
+            const filter = ac.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = filterFreq || 1800;
+            const gain = ac.createGain(); gain.gain.value = volume;
+            src.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+            src.start();
+        }
+        function tone(freq, duration, type, volume, glideTo) {
+            const ac = audioCtx(); if (!ac) return;
+            const osc = ac.createOscillator(); osc.type = type || 'sine';
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, ac.currentTime + duration);
+            const gain = ac.createGain(); gain.gain.setValueAtTime(volume, ac.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+            osc.connect(gain); gain.connect(ac.destination);
+            osc.start(); osc.stop(ac.currentTime + duration);
+        }
+        const sfx = {
+            explosion(size) {
+                size = Math.min(1, (size || 10) / 25);
+                noiseBurst(0.5 + size * 0.6, 0.5 + size * 0.4, 500 + size * 400);
+                tone(60 + size * 40, 0.4 + size * 0.4, 'sawtooth', 0.35, 30);
+            },
+            fire() { noiseBurst(0.12, 0.05, 3500); },
+            splash() { tone(500, 0.15, 'sine', 0.15, 200); noiseBurst(0.1, 0.06, 2500); },
+            footstep() { noiseBurst(0.05, 0.08, 700); },
+            hit() { tone(180, 0.12, 'square', 0.2, 90); noiseBurst(0.08, 0.12, 1200); },
+            death() { tone(220, 0.5, 'sawtooth', 0.25, 40); noiseBurst(0.4, 0.2, 800); },
+            place() { tone(700, 0.04, 'square', 0.05, 900); },
+            laser() { tone(1400, 0.12, 'sawtooth', 0.12, 300); },
+            electric() { noiseBurst(0.08, 0.15, 5000); tone(900, 0.08, 'square', 0.08); },
+            spawn() { tone(300, 0.25, 'sine', 0.2, 700); }
+        };
+        window.addEventListener('mousedown', () => { audioCtx(); }, { once: true });
+
+        // ===================== MÚSICA DE FONDO (subir un MP3/audio y escucharlo mientras juegas) =====================
+        const bgMusic = new Audio();
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5;
+        document.getElementById('musicFileInput').addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            bgMusic.src = URL.createObjectURL(file);
+            document.getElementById('musicName').textContent = file.name;
+            bgMusic.play().catch(() => {});
+        });
+        document.getElementById('musicPlayBtn').onclick = () => { bgMusic.play().catch(() => {}); };
+        document.getElementById('musicStopBtn').onclick = () => { bgMusic.pause(); bgMusic.currentTime = 0; };
+        document.getElementById('musicVolume').oninput = function () { bgMusic.volume = this.value / 100; };
+
+        let lastMouseGX = Math.floor(cols / 2), lastMouseGY = Math.floor(rows / 2);
+
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; handleDraw(e); });
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseleave', () => isDrawing = false);
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            lastMouseGX = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / cellSize);
+            lastMouseGY = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / cellSize);
+            if (isDrawing) handleDraw(e);
+        });
+
+        function handleDraw(e) {
+            const rect = canvas.getBoundingClientRect();
+            const gridX = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / cellSize);
+            const gridY = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / cellSize);
+
+            if (!inBounds(gridX, gridY)) return;
+
+            if (currentElement === 99) {
+                if (e.type === 'mousedown') spawnMyCharacter(gridX, gridY);
+            } else if (currentElement === 53 && e.type === 'mousedown') {
+                blackHoles.push({ x: gridX, y: gridY, phase: 'sun', timer: 0, radius: 2 });
+            } else if (currentElement === 10 && e.type === 'mousedown') {
+                drawLightning(gridX, gridY, 10); sfx.electric();
+            } else if (currentElement === 54 && e.type === 'mousedown') {
+                drawLightning(gridX, gridY, 54); sfx.electric();
+            } else if (currentElement === 97 && e.type === 'mousedown') {
+                meteors.push({ x: gridX, y: 0, vy: 2 });
+            } else if (currentElement === 98 && e.type === 'mousedown') {
+                tornadoes.push({ x: gridX, y: gridY, vx: (Math.random() < 0.5 ? -1 : 1) * 0.5, vy: 0, radius: 6, life: 500 });
+            } else if (currentElement === 129 && e.type === 'mousedown') {
+                drawFreezeBeam(gridX, gridY); shake = 8; sfx.electric();
+            } else if (currentElement === 142 && e.type === 'mousedown') {
+                rockets.push({ x: gridX, y: gridY, vy: -3 });
+            } else if (currentElement === 144 && e.type === 'mousedown') {
+                detonateAll();
+            } else if (currentElement === 151 && e.type === 'mousedown') {
+                buildVolcano(gridX, gridY);
+            } else if (CREATURE_TYPES.includes(currentElement)) {
+                if (e.type === 'mousedown') spawnCreature(currentElement, gridX, gridY);
+            } else {
+                if (e.type === 'mousedown') sfx.place();
+                drawElement(gridX, gridY);
+            }
+        }
+
+        function spawnMyCharacter(gridX, gridY) {
+            player.active = true; player.x = gridX; player.y = gridY; player.hp = 100; player.vy = 0; player.onFire = 0;
+            resetPlayerParts();
+            sfx.spawn();
+        }
+
+        function detonateAll() {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    if (EXPLOSIVE_TRIGGER_TYPES.includes(grid[i][j].type)) {
+                        explodeAt(i, j, grid[i][j].type === 22 ? 15 : 17, 4);
+                    }
+                }
+            }
+        }
+
+        function buildVolcano(cx, groundY) {
+            let h = Math.max(5, Math.min(60, volcanoHeight));
+            for (let level = 0; level < h; level++) {
+                let width = Math.floor((h - level) * 0.6) + 1;
+                let y = groundY - level;
+                if (y < 0) break;
+                for (let dx = -width; dx <= width; dx++) {
+                    let x = cx + dx;
+                    if (inBounds(x, y) && grid[x][y].type === 0) grid[x][y] = { type: 150, color: getTexture(150) };
+                }
+            }
+            let craterY = Math.max(0, groundY - h);
+            for (let dx = -2; dx <= 2; dx++) {
+                let x = cx + dx;
+                if (inBounds(x, craterY)) grid[x][craterY] = { type: 5, color: getTexture(5), life: 200 };
+            }
+            shake = Math.max(shake, 12);
+        }
+
+        function updateRockets() {
+            for (let ri = rockets.length - 1; ri >= 0; ri--) {
+                let r = rockets[ri];
+                r.vy -= 0.1; r.y += r.vy;
+                let gx = Math.floor(r.x), gy = Math.floor(r.y);
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(gx * cellSize - 2, gy * cellSize - 4, cellSize + 4, cellSize + 8);
+                ctx.fillStyle = Math.random() < 0.5 ? '#ff8800' : '#ffcc00';
+                ctx.fillRect(gx * cellSize - 2, (gy + 1) * cellSize, cellSize + 4, cellSize * 2);
+                if (gy <= 1 || r.vy > -0.5 || (inBounds(gx, gy - 1) && grid[gx][gy - 1].type !== 0)) {
+                    explodeAt(gx, gy, 12, 4);
+                    rockets.splice(ri, 1);
+                }
+            }
+        }
+
+        function drawLightning(targetX, targetY, type) {
+            let cx = targetX;
+            for (let cy = targetY; cy >= 0; cy--) {
+                cx += (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 3);
+                for (let w = -1; w <= 1; w++) {
+                    if (inBounds(cx + w, cy)) grid[cx + w][cy] = { type: type, color: getTexture(type), life: 3 };
+                }
+            }
+            shake = type === 54 ? 18 : 10;
+        }
+
+        function drawFreezeBeam(targetX, targetY) {
+            let cx = targetX;
+            for (let cy = targetY; cy < rows; cy++) {
+                if (!inBounds(cx, cy)) break;
+                if (grid[cx][cy].type !== 0 && grid[cx][cy].type !== 3) { grid[cx][cy] = { type: 7, color: getTexture(7) }; }
+                else if (grid[cx][cy].type === 3) break;
+            }
+        }
+
+        function drawElement(gridX, gridY) {
+            const isSolid = [3, 6, 7, 8, 12, 19, 22, 23, 28, 36, 38, 40, 43, 45, 49, 50, 56,
+                85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 100, 101,
+                117, 118, 119, 120, 121, 122, 123, 128, 130, 132,
+                133, 135, 139, 140, 141, 143, 146, 147, 148, 149, 150,
+                155, 160, 164, 165, 166, 167, 174, 175, 176, 178, 180,
+                183, 190, 191, 192, 193, 197, 201, 198, 199].includes(currentElement);
+            const brush = isSolid ? 1 : 2;
+
+            for (let i = -brush; i <= brush; i++) {
+                for (let j = -brush; j <= brush; j++) {
+                    let col = gridX + i; let row = gridY + j;
+                    if (inBounds(col, row)) {
+                        if (i * i + j * j <= brush * brush) {
+                            if (currentElement === 0 || Math.random() > 0.1 || [3, 23].includes(currentElement)) {
+                                let initLife = (currentElement === 4) ? Math.floor(Math.random() * 20 + 30) :
+                                    ([13, 14].includes(currentElement)) ? 9999 :
+                                    (DISSIPATING_GASES.includes(currentElement)) ? Math.floor(Math.random() * 80 + 60) :
+                                    (currentElement === 128 || currentElement === 147) ? 90 : 100;
+                                grid[col][row] = { type: currentElement, color: getTexture(currentElement), life: initLife };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function triggerExplosion(nextGrid, cx, cy, radius, fireType) {
+            sfx.explosion(radius);
+            for (let ex = -radius; ex <= radius; ex++) {
+                for (let ey = -radius; ey <= radius; ey++) {
+                    let nx = cx + ex; let ny = cy + ey;
+                    if (inBounds(nx, ny)) {
+                        let t = grid[nx][ny].type;
+                        if (!IMMUNE_SOLIDS.includes(t)) {
+                            if (ex * ex + ey * ey <= radius * radius) {
+                                nextGrid[nx][ny] = Math.random() > 0.2 ? { type: fireType, color: getTexture(fireType), life: 40 } : { type: 0 };
+                            }
+                        }
+                    }
+                }
+            }
+            for (let a = 0; a < 14; a++) {
+                let ang = Math.random() * Math.PI * 2;
+                let dist = radius + Math.random() * 3;
+                let sx = Math.floor(cx + Math.cos(ang) * dist);
+                let sy = Math.floor(cy + Math.sin(ang) * dist);
+                if (inBounds(sx, sy) && grid[sx][sy].type === 0) {
+                    grid[sx][sy] = { type: 31, color: getTexture(31), life: Math.floor(Math.random() * 50 + 40) };
+                }
+            }
+            shake = Math.max(shake, radius);
+            if (player.active) {
+                let pdx = (player.x + player.width / 2) - cx; let pdy = (player.y + player.height / 2) - cy;
+                let pdist = Math.hypot(pdx, pdy);
+                if (pdist <= radius + 2) applyHazardDamage('explosion', Math.max(6, 30 - pdist * 3));
+            }
+        }
+
+        function explodeAt(cx, cy, radius, fireType) {
+            sfx.explosion(radius);
+            for (let ex = -radius; ex <= radius; ex++) {
+                for (let ey = -radius; ey <= radius; ey++) {
+                    let nx = cx + ex; let ny = cy + ey;
+                    if (inBounds(nx, ny) && !IMMUNE_SOLIDS.includes(grid[nx][ny].type)) {
+                        if (ex * ex + ey * ey <= radius * radius) {
+                            grid[nx][ny] = Math.random() > 0.2 ? { type: fireType, color: getTexture(fireType), life: 40 } : { type: 0 };
+                        }
+                    }
+                }
+            }
+            shake = Math.max(shake, radius);
+            if (player.active) {
+                let pdx = (player.x + player.width / 2) - cx; let pdy = (player.y + player.height / 2) - cy;
+                let pdist = Math.hypot(pdx, pdy);
+                if (pdist <= radius + 2) applyHazardDamage('explosion', Math.max(10, 45 - pdist * 3));
+            }
+        }
+
+        // ===================== SANGRE Y DESMEMBRAMIENTO =====================
+        function severLimb() {
+            if (!player.active || !player.parts) return;
+            let attachedKeys = Object.keys(player.parts).filter(k => player.parts[k].attached);
+            if (attachedKeys.length === 0) { killPlayer(); return; }
+            let key = attachedKeys[Math.floor(Math.random() * attachedKeys.length)];
+            let part = player.parts[key];
+            part.attached = false;
+            let wx = Math.floor(player.x + part.dx);
+            let wy = Math.floor(player.y + part.dy);
+
+            for (let s = 0; s < 9; s++) {
+                let sx = wx + Math.floor((Math.random() - 0.5) * 5);
+                let sy = wy + Math.floor((Math.random() - 0.5) * 5);
+                if (inBounds(sx, sy) && grid[sx][sy].type === 0) grid[sx][sy] = { type: 24, color: getTexture(24), life: 120 };
+            }
+            gibs.push({ x: wx, y: wy, vx: (Math.random() - 0.5) * 3.5, vy: -Math.random() * 2.2 - 1, w: 0.8, h: 0.8, color: part.color, life: 220, settled: false });
+            shake = Math.max(shake, 9);
+            sfx.hit();
+            player.hp -= 15;
+            if (Object.values(player.parts).every(p => !p.attached) || player.hp <= 0) killPlayer();
+        }
+
+        function killPlayer() {
+            if (!player.active) return;
+            let wx = Math.floor(player.x + player.width / 2), wy = Math.floor(player.y + player.height / 2);
+            for (let s = 0; s < 28; s++) {
+                let sx = wx + Math.floor((Math.random() - 0.5) * 8);
+                let sy = wy + Math.floor((Math.random() - 0.5) * 8);
+                if (inBounds(sx, sy)) grid[sx][sy] = Math.random() < 0.78 ? { type: 24, color: getTexture(24), life: 140 } : { type: 30, color: getTexture(30), life: 140 };
+            }
+            shake = Math.max(shake, 16);
+            sfx.death();
+            player.active = false;
+            player.hp = 0;
+        }
+
+        function applyHazardDamage(cause, amount) {
+            if (!player.active) return;
+            player.hp -= amount;
+            if (!NON_SEVER_HAZARDS.includes(cause) && Math.random() < 0.15) {
+                severLimb();
+            } else if (player.hp <= 0) {
+                killPlayer();
+            }
+        }
+
+        function updateGibs() {
+            for (let i = gibs.length - 1; i >= 0; i--) {
+                let g = gibs[i];
+                if (!g.settled) {
+                    g.vy += 0.25;
+                    g.x += g.vx; g.y += g.vy; g.vx *= 0.92;
+                    let gx = Math.floor(g.x), gy = Math.floor(g.y);
+                    if (gy >= rows - 1 || (inBounds(gx, gy + 1) && grid[gx][gy + 1].type !== 0)) {
+                        g.settled = true; g.vx = 0; g.vy = 0;
+                        for (let s = 0; s < 3; s++) {
+                            let sx = gx + Math.floor((Math.random() - 0.5) * 2), sy = gy + 1;
+                            if (inBounds(sx, sy) && grid[sx][sy].type === 0) grid[sx][sy] = { type: 24, color: getTexture(24), life: 150 };
+                        }
+                    }
+                }
+                g.life--;
+                if (g.life <= 0) {
+                    let gx = Math.floor(g.x), gy = Math.floor(g.y);
+                    if (inBounds(gx, gy) && grid[gx][gy].type === 0 && Math.random() < 0.6) grid[gx][gy] = { type: 30, color: getTexture(30), life: 80 };
+                    gibs.splice(i, 1);
+                }
+            }
+        }
+
+        function drawGibs() {
+            for (let g of gibs) {
+                ctx.fillStyle = '#f0e6d2';
+                ctx.fillRect(g.x * cellSize, g.y * cellSize, g.w * cellSize, g.h * cellSize);
+                ctx.fillStyle = g.color;
+                ctx.fillRect(g.x * cellSize, g.y * cellSize, g.w * cellSize, g.h * cellSize * 0.6);
+                ctx.fillStyle = 'rgba(138,3,3,0.7)';
+                ctx.fillRect(g.x * cellSize, g.y * cellSize + g.h * cellSize - 1, g.w * cellSize, 2);
+            }
+        }
+
+        function updateGrid() {
+            let nextGrid = createGrid();
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    if (STATIC_SOLIDS.includes(grid[i][j].type) && !exaggeratedPhysics) {
+                        nextGrid[i][j] = { ...grid[i][j] };
+                    }
+                }
+            }
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = rows - 1; j >= 0; j--) {
+                    let cell = grid[i][j];
+                    if (cell.type === 0 || (STATIC_SOLIDS.includes(cell.type) && !exaggeratedPhysics)) continue;
+
+                    let t = cell.type;
+                    let neighbors = [];
+                    if (inBounds(i - 1, j)) neighbors.push({ x: i - 1, y: j, t: grid[i - 1][j].type });
+                    if (inBounds(i + 1, j)) neighbors.push({ x: i + 1, y: j, t: grid[i + 1][j].type });
+                    if (inBounds(i, j - 1)) neighbors.push({ x: i, y: j - 1, t: grid[i][j - 1].type });
+                    if (inBounds(i, j + 1)) neighbors.push({ x: i, y: j + 1, t: grid[i][j + 1].type });
+
+                    let tFire = neighbors.some(n => FIRE_SOURCES.includes(n.t));
+                    let tWater = neighbors.some(n => n.t === 2 || n.t === 20);
+
+                    // Física exagerada: sólidos sin soporte caen como escombros pesados
+                    if (exaggeratedPhysics && STATIC_SOLIDS.includes(t)) {
+                        let bY = j + 1;
+                        if (bY < rows && grid[i][bY].type === 0 && isEmpty(nextGrid, i, bY)) { nextGrid[i][bY] = cell; }
+                        else { nextGrid[i][j] = cell; }
+                        continue;
+                    }
+
+                    // ---- C4 (arreglado: ya no está atascado como estático) ----
+                    if (t === 22) {
+                        if (neighbors.some(n => n.t === 10 || n.t === 54)) { triggerExplosion(nextGrid, i, j, 15, 4); continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // ---- Ventilador (arreglado: ahora sí sopla) ----
+                    if (t === 23) {
+                        if (inBounds(i, j - 1) && isEmpty(nextGrid, i, j - 1) && Math.random() < 0.3) {
+                            for (let wy = j - 1; wy > Math.max(0, j - 15); wy--) {
+                                let wT = grid[i][wy].type;
+                                if ([1, 4, 14, 15, 16, 30, 31].includes(wT)) {
+                                    if (inBounds(i, wy - 2) && isEmpty(nextGrid, i, wy - 2)) {
+                                        nextGrid[i][wy - 2] = grid[i][wy]; nextGrid[i][wy] = { type: 0 };
+                                    }
+                                }
+                            }
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // ---- TNT / Bomba Racimo (arreglado: ya no desaparecen solos) ----
+                    if (t === 96 || t === 101) {
+                        if (tFire || neighbors.some(n => n.t === 10 || n.t === 54)) { triggerExplosion(nextGrid, i, j, t === 96 ? 18 : 24, 4); continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // Granada: cuenta regresiva y detona
+                    if (t === 128) {
+                        cell.life = (cell.life !== undefined ? cell.life : 90) - 1;
+                        if (cell.life <= 0) { triggerExplosion(nextGrid, i, j, 10, 4); continue; }
+                        let bY = j + 1;
+                        if (bY < rows && grid[i][bY].type === 0 && isEmpty(nextGrid, i, bY)) nextGrid[i][bY] = cell;
+                        else nextGrid[i][j] = cell;
+                        continue;
+                    }
+
+                    // Bomba de humo
+                    if (t === 132) {
+                        if (tFire || neighbors.some(n => n.t === 10 || n.t === 54)) {
+                            for (let s = 0; s < 10; s++) {
+                                let sx = i + Math.floor((Math.random() - 0.5) * 5), sy = j + Math.floor((Math.random() - 0.5) * 5);
+                                if (inBounds(sx, sy) && nextGrid[sx][sy] && nextGrid[sx][sy].type === 0) nextGrid[sx][sy] = { type: 31, color: getTexture(31), life: 120 };
+                            }
+                            continue;
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // Arma que se rompe
+                    if (t === 130) {
+                        if (tFire || neighbors.some(n => n.t === 10 || n.t === 54 || n.t === 21)) {
+                            for (let s = 0; s < 6; s++) {
+                                let sx = i + Math.floor((Math.random() - 0.5) * 3), sy = j + Math.floor((Math.random() - 0.5) * 3);
+                                if (inBounds(sx, sy) && nextGrid[sx][sy] && nextGrid[sx][sy].type === 0) nextGrid[sx][sy] = { type: 36, color: getTexture(36) };
+                            }
+                            shake = Math.max(shake, 5);
+                            continue;
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // Madera podrida: se prende más fácil
+                    if (t === 118) {
+                        if (tFire && Math.random() < 0.15) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 40 }; continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // ===== 10 EXPLOSIVOS NUEVOS =====
+                    // Dinamita
+                    if (t === 140) {
+                        if (tFire || neighbors.some(n => n.t === 10 || n.t === 54)) { triggerExplosion(nextGrid, i, j, 14, 4); continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+                    // Mina (explota con el jugador o con fuego encima)
+                    if (t === 141) {
+                        let trig = tFire;
+                        if (player.active) {
+                            let pdx = (player.x + player.width / 2) - i, pdy = (player.y + player.height / 2) - j;
+                            if (Math.hypot(pdx, pdy) < 2.2) trig = true;
+                        }
+                        if (trig) { triggerExplosion(nextGrid, i, j, 10, 4); continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+                    // Barril explosivo (encadena con otros barriles/C4 cercanos)
+                    if (t === 143) {
+                        if (tFire || neighbors.some(n => n.t === 10 || n.t === 54)) { triggerExplosion(nextGrid, i, j, 16, 4); continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+                    // Napalm: líquido que sigue ardiendo y prende lo que toca
+                    if (t === 145 && tFire) {
+                        for (let n of neighbors) { if (n.t === 0 && Math.random() < 0.12) nextGrid[n.x][n.y] = { type: 4, color: getTexture(4), life: 35 }; }
+                    }
+                    // Fósforo blanco: se autoenciende y arde violento
+                    if (t === 146 && (tFire || Math.random() < 0.002)) { triggerExplosion(nextGrid, i, j, 5, 4); continue; }
+                    // Granada de fragmentación: cuenta regresiva + esquirlas
+                    if (t === 147) {
+                        cell.life = (cell.life !== undefined ? cell.life : 70) - 1;
+                        if (cell.life <= 0) {
+                            triggerExplosion(nextGrid, i, j, 9, 4);
+                            for (let s = 0; s < 10; s++) {
+                                let ang = Math.random() * Math.PI * 2, dist = 6 + Math.random() * 4;
+                                let sx = Math.floor(i + Math.cos(ang) * dist), sy = Math.floor(j + Math.sin(ang) * dist);
+                                if (inBounds(sx, sy) && grid[sx][sy].type === 0) grid[sx][sy] = { type: 36, color: getTexture(36) };
+                            }
+                            continue;
+                        }
+                        let bY = j + 1;
+                        if (bY < rows && grid[i][bY].type === 0 && isEmpty(nextGrid, i, bY)) nextGrid[i][bY] = cell; else nextGrid[i][j] = cell;
+                        continue;
+                    }
+                    // Carga hueca: explosión direccional hacia abajo (cava un túnel)
+                    if (t === 148) {
+                        if (tFire) {
+                            for (let dy = 1; dy <= 22; dy++) {
+                                let ty = j + dy;
+                                if (!inBounds(i, ty) || grid[i][ty].type === 3 || IMMUNE_SOLIDS.includes(grid[i][ty].type)) break;
+                                nextGrid[i][ty] = { type: 0 };
+                            }
+                            shake = Math.max(shake, 10);
+                            continue;
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+                    // Bomba sucia: explosión + lluvia radiactiva
+                    if (t === 149) {
+                        if (tFire || neighbors.some(n => n.t === 10 || n.t === 54)) {
+                            triggerExplosion(nextGrid, i, j, 14, 4);
+                            for (let s = 0; s < 20; s++) {
+                                let sx = i + Math.floor((Math.random() - 0.5) * 22), sy = j + Math.floor((Math.random() - 0.5) * 22);
+                                if (inBounds(sx, sy) && grid[sx][sy].type === 0 && Math.random() < 0.3) grid[sx][sy] = { type: 47, color: getTexture(47), life: 260 };
+                            }
+                            continue;
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // ===== NUEVAS MEZCLAS: metal, orgánicos, asfalto =====
+                    // Hierro + Agua = Hierro Oxidado (con óxido residual)
+                    if (t === 133) {
+                        if (tWater && Math.random() < 0.02) {
+                            nextGrid[i][j] = { type: 135, color: getTexture(135) };
+                            if (inBounds(i, j - 1) && grid[i][j - 1].type === 0 && Math.random() < 0.4) nextGrid[i][j - 1] = { type: 134, color: getTexture(134) };
+                            continue;
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+                    // Carne + Hongo/Moho = Carne Podrida
+                    if (t === 136) {
+                        if (neighbors.some(n => n.t === 94 || n.t === 45) && Math.random() < 0.03) { nextGrid[i][j] = { type: 137, color: getTexture(137) }; continue; }
+                    }
+                    // Carne Podrida: se descompone y esparce moho
+                    if (t === 137 && Math.random() < 0.004 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) {
+                        nextGrid[i][j - 1] = { type: 45, color: getTexture(45) };
+                    }
+                    // Hueso / Hueso Sólido + Ácido = Hueso Corrompido
+                    if ((t === 66 || t === 87) && neighbors.some(n => n.t === 27) && Math.random() < 0.12) { nextGrid[i][j] = { type: 138, color: getTexture(138) }; continue; }
+                    // Asfalto: se derrite con calor extremo (lava/magma)
+                    if (t === 139) {
+                        if (neighbors.some(n => [5, 42].includes(n.t)) && Math.random() < 0.04) { nextGrid[i][j] = { type: 75, color: getTexture(75) }; continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // ===== TABLA PERIÓDICA: reacciones =====
+                    if (t === 156 && tWater) { triggerExplosion(nextGrid, i, j, 9, 4); continue; } // Sodio + Agua = explosión
+                    if (t === 157 && tWater) { triggerExplosion(nextGrid, i, j, 13, 4); continue; } // Potasio + Agua = explosión mayor
+                    if (t === 170 && tWater && Math.random() < 0.5) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 60 }; continue; } // Litio + Agua = fuego
+                    if (t === 158 && tWater && Math.random() < 0.06) { nextGrid[i][j] = { type: 152, color: getTexture(152), life: 80 }; continue; } // Calcio + Agua = Hidrógeno
+                    if (t === 159 && tFire) { triggerExplosion(nextGrid, i, j, 3, 4); shake = Math.max(shake, 6); continue; } // Magnesio arde muy intenso
+                    if (t === 161 && tFire && Math.random() < 0.05) { nextGrid[i][j] = { type: 12, color: getTexture(12) }; continue; } // Silicio + Fuego = Cristal
+                    if (t === 155 && neighbors.some(n => n.t === 5 || n.t === 42) && Math.random() < 0.01) { nextGrid[i][j] = { type: 38, color: getTexture(38) }; continue; } // Carbono bajo lava = Diamante
+                    if (t === 152 && tFire) { triggerExplosion(nextGrid, i, j, 6, 4); continue; } // Hidrógeno + Fuego = explosión
+                    if (t === 153 && tFire && Math.random() < 0.08 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) { nextGrid[i][j - 1] = { type: 4, color: getTexture(4), life: 45 }; } // Oxígeno alimenta el fuego
+                    if ((t === 154 || t === 163) && neighbors.some(n => n.t === 4) && Math.random() < 0.3) {
+                        let f = neighbors.find(n => n.t === 4); nextGrid[f.x][f.y] = { type: 0 };
+                    } // Nitrógeno/Argón apagan el fuego
+                    if (t === 165 && neighbors.some(n => n.t === 27) && Math.random() < 0.06 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) { nextGrid[i][j - 1] = { type: 152, color: getTexture(152), life: 60 }; } // Zinc + Ácido = Hidrógeno
+                    if (t === 160 && neighbors.some(n => n.t === 27) && Math.random() < 0.05 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) { nextGrid[i][j - 1] = { type: 152, color: getTexture(152), life: 60 }; } // Aluminio + Ácido = Hidrógeno
+                    if (t === 171) { let tgt = neighbors.find(n => DISSOLVABLE.includes(n.t) || n.t === 12); if (tgt && Math.random() < 0.3) nextGrid[tgt.x][tgt.y] = { type: 0 }; } // Flúor corroe casi todo
+                    if (t === 172) { let tgt = neighbors.find(n => DISSOLVABLE.includes(n.t)); if (tgt && Math.random() < 0.12) nextGrid[tgt.x][tgt.y] = { type: 0 }; } // Bromo corrosivo
+                    if (t === 173 && Math.random() < 0.008) { nextGrid[i][j] = { type: 31, color: getTexture(31), life: 70 }; continue; } // Yodo se sublima
+                    if ((t === 164 || t === 166) && neighbors.some(n => n.t === 10 || n.t === 54) && Math.random() < 0.1 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) { nextGrid[i][j - 1] = { type: 131, color: getTexture(131), life: 20 }; } // Cobre/Plata + Rayo = Chispas
+                    if (t === 166 && Math.random() < 0.01) { let bad = neighbors.find(n => n.t === 45 || n.t === 100); if (bad) nextGrid[bad.x][bad.y] = { type: 0 }; } // Plata elimina moho/germen cerca
+                    if (t === 168) { if (Math.random() < 0.002) { nextGrid[i][j] = { type: 179, color: getTexture(179) }; continue; } if (Math.random() < 0.02 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) nextGrid[i][j - 1] = { type: 47, color: getTexture(47), life: 150 }; } // Uranio decae a Plomo y emite radiación
+                    if (t === 169 && Math.random() < 0.0006) { triggerExplosion(nextGrid, i, j, 18, 4); continue; } // Plutonio inestable
+                    if (t === 178 && tFire && Math.random() < 0.2) { nextGrid[i][j] = { type: 26, color: getTexture(26) }; continue; } // Estaño se derrite como metal líquido
+                    if (t === 181 && tFire && Math.random() < 0.15 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) { nextGrid[i][j - 1] = { type: 4, color: '#77ff88', life: 40 }; } // Bario: llama verde
+
+                    // ===== 20 ELEMENTOS NUEVOS: reacciones =====
+                    if (t === 182 && tWater && Math.random() < 0.03) { nextGrid[i][j] = { type: 28, color: getTexture(28) }; continue; } // Cemento+Agua=Concreto
+                    if (t === 184 && neighbors.some(n => n.t === 4)) { let f = neighbors.find(n => n.t === 4); nextGrid[f.x][f.y] = { type: 31, color: getTexture(31), life: 40 }; } // Espuma apaga fuego (deja humo)
+                    if (t === 185 && tFire) { for (let n of neighbors) { if (n.t === 0 && Math.random() < 0.15) nextGrid[n.x][n.y] = { type: 4, color: getTexture(4), life: 45 }; } } // Gel inflamable propaga fuego
+                    if (t === 186) { let tgt = neighbors.find(n => n.t !== 0 && !IMMUNE_SOLIDS.includes(n.t)); if (tgt && Math.random() < 0.35) nextGrid[tgt.x][tgt.y] = { type: 0 }; } // Ácido fuerte disuelve casi todo
+                    if (t === 187 && j + 1 < rows && grid[i][j + 1].type === 2 && Math.random() < 0.6) { nextGrid[i][j] = grid[i][j + 1]; nextGrid[i][j + 1] = cell; continue; } // Agua pesada se hunde bajo el agua normal
+                    if (t === 188) { let bad = neighbors.find(n => [27, 39, 77, 47, 48, 168, 169].includes(n.t)); if (bad && Math.random() < 0.25) nextGrid[bad.x][bad.y] = { type: 2, color: getTexture(2) }; } // Antídoto neutraliza veneno/ácido/radiación
+                    if (t === 191 && neighbors.some(n => n.t === 27 || n.t === 186) && Math.random() < 0.15) { nextGrid[i][j] = { type: 48, color: getTexture(48), life: 80 }; continue; } // Piedra caliza+Ácido=Gas Tóxico (burbujea)
+                    if (t === 194 && tFire && Math.random() < 0.04) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 120 }; if (inBounds(i, j - 1) && grid[i][j - 1].type === 0) nextGrid[i][j - 1] = { type: 31, color: getTexture(31), life: 100 }; continue; } // Turba arde lento con mucho humo
+                    if (t === 195 && neighbors.some(n => n.t === 7 || n.t === 33) && Math.random() < 0.05) { nextGrid[i][j] = { type: 56, color: getTexture(56) }; continue; } // Resina+Frío=Ámbar
+                    if (t === 198 && tFire) { triggerExplosion(nextGrid, i, j, 16, 4); continue; } // Pólvora negra: explosión grande
+                    if (t === 199 && tFire) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 30 }; continue; } // Mecha rápida: enciende al instante
+                    if (t === 200 && (neighbors.some(n => n.t === 7 || n.t === 2) || ambientTemp < 5) && Math.random() < 0.2) { nextGrid[i][j] = { type: 85, color: getTexture(85) }; continue; } // Metal fundido se solidifica en Acero
+                    if (t === 196) { // Algas: crecen en agua
+                        if (tWater && Math.random() < 0.04) {
+                            let gX = i + (Math.random() < 0.5 ? -1 : 1);
+                            if (inBounds(gX, j) && grid[gX][j].type === 0) nextGrid[gX][j] = { type: 196, color: getTexture(196) };
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // 30 mecánicas extra de combinación
+                    if (t === 30 && tWater && Math.random() < 0.05) { nextGrid[i][j] = { type: 34, color: getTexture(34) }; continue; }
+                    if (t === 1 && tWater && Math.random() < 0.02) { nextGrid[i][j] = { type: 34, color: getTexture(34) }; continue; }
+                    if (t === 63 && tWater && Math.random() < 0.02) { nextGrid[i][j] = { type: 28, color: getTexture(28) }; continue; }
+                    if (t === 29 && tWater && Math.random() < 0.1) { nextGrid[i][j] = { type: 1, color: getTexture(1) }; continue; }
+                    if (t === 73 && tWater && Math.random() < 0.15) { nextGrid[i][j] = { type: 2, color: getTexture(2) }; continue; }
+                    if (t === 51 && neighbors.some(n => n.t === 7) && Math.random() < 0.06) { nextGrid[i][j] = { type: 17, color: getTexture(17) }; continue; }
+                    if (t === 76 && neighbors.some(n => n.t === 27) && Math.random() < 0.1) { nextGrid[i][j] = { type: 39, color: getTexture(39) }; continue; }
+                    if (t === 24 && tFire && Math.random() < 0.2) { nextGrid[i][j] = { type: 30, color: getTexture(30) }; continue; }
+                    if (t === 24 && tWater && Math.random() < 0.08) { nextGrid[i][j] = { type: 2, color: getTexture(2) }; continue; }
+                    if (t === 72 && tFire && Math.random() < 0.15) { nextGrid[i][j] = { type: 48, color: getTexture(48), life: 100 }; continue; }
+                    if (t === 65 && tFire && Math.random() < 0.2) { nextGrid[i][j] = { type: 48, color: getTexture(48), life: 100 }; continue; }
+                    if (t === 64 && tFire && Math.random() < 0.06) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 90 }; continue; }
+                    if (t === 68 && neighbors.some(n => n.t === 11) && Math.random() < 0.08) { nextGrid[i][j] = { type: 93, color: getTexture(93) }; continue; }
+                    if (t === 70 && tFire && Math.random() < 0.3) { triggerExplosion(nextGrid, i, j, 3, 4); continue; }
+                    if (t === 107 && tFire && Math.random() < 0.1) { nextGrid[i][j] = { type: 12, color: getTexture(12) }; continue; }
+                    if (t === 107 && neighbors.some(n => n.t === 5) && Math.random() < 0.15) { nextGrid[i][j] = { type: 12, color: getTexture(12) }; continue; }
+                    if (t === 74 && neighbors.some(n => [39, 27, 77].includes(n.t)) && Math.random() < 0.2) {
+                        let bad = neighbors.find(n => [39, 27, 77].includes(n.t));
+                        nextGrid[bad.x][bad.y] = { type: 2, color: getTexture(2) };
+                    }
+                    if (t === 47 && tWater && Math.random() < 0.04) { nextGrid[i][j] = { type: 112, color: getTexture(112) }; continue; }
+                    if (t === 26 && tFire && Math.random() < 0.1) { nextGrid[i][j] = { type: 48, color: getTexture(48), life: 100 }; continue; }
+                    if (t === 52 && tWater && Math.random() < 0.08) { nextGrid[i][j] = { type: 80, color: getTexture(80), life: 150 }; continue; }
+                    if (t === 85 && neighbors.some(n => n.t === 10 || n.t === 54) && Math.random() < 0.08 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) {
+                        nextGrid[i][j - 1] = { type: 131, color: getTexture(131), life: 20 };
+                    }
+                    if (t === 5 && neighbors.some(n => n.t === 9 || n.t === 35) && Math.random() < 0.3) { triggerExplosion(nextGrid, i, j, 6, 4); continue; }
+                    if (t === 42 && neighbors.some(n => n.t === 7) && Math.random() < 0.2) { nextGrid[i][j] = { type: 43, color: getTexture(43) }; continue; }
+                    if (t === 92 && neighbors.some(n => n.t === 10 || n.t === 54) && Math.random() < 0.005) { nextGrid[i][j] = { type: 44, color: getTexture(44) }; continue; }
+                    if (t === 102 && tFire && Math.random() < 0.3) { nextGrid[i][j] = { type: 131, color: getTexture(131), life: 30 }; continue; }
+                    if (t === 77 && tFire && Math.random() < 0.15) { nextGrid[i][j] = { type: 48, color: getTexture(48), life: 100 }; continue; }
+                    if (t === 75 && tFire && Math.random() < 0.05) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 100 }; continue; }
+                    if ((t === 9 || t === 35) && j + 1 < rows && grid[i][j + 1].type === 2 && Math.random() < 0.5) {
+                        nextGrid[i][j] = grid[i][j + 1]; nextGrid[i][j + 1] = cell; continue;
+                    }
+
+                    if (t === 29 && tFire) { triggerExplosion(nextGrid, i, j, 12, 4); continue; }
+                    if (t === 73 && (tFire || neighbors.some(n => [5, 42].includes(n.t)))) { triggerExplosion(nextGrid, i, j, 20, 4); continue; }
+
+                    if (t === 44) {
+                        let hostile = neighbors.some(n => n.t !== 0 && n.t !== 44);
+                        if (hostile) { triggerExplosion(nextGrid, i, j, 22, 4); continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    if (t === 10 || t === 54) {
+                        cell.life = (cell.life || 3) - 1;
+                        if (cell.life > 0) nextGrid[i][j] = cell;
+                        continue;
+                    }
+
+                    // Láser (respeta acero/titanio/hormigón, rebota en espejo)
+                    if (t === 21) {
+                        cell.life--; if (cell.life <= 0) continue;
+                        for (let ly = j + 1; ly < rows; ly++) {
+                            let lT = grid[i][ly].type;
+                            if (lT === 90) {
+                                let dir = Math.random() < 0.5 ? -1 : 1;
+                                for (let s = 1; s <= 6; s++) {
+                                    let bx = i + dir * s;
+                                    if (inBounds(bx, ly) && grid[bx][ly].type === 0) nextGrid[bx][ly] = { type: 21, color: '#ff0000', life: 1 };
+                                    else break;
+                                }
+                                break;
+                            } else if (lT !== 0 && lT !== 21 && lT !== 12) {
+                                if (!IMMUNE_SOLIDS.includes(lT) && Math.random() < 0.2) triggerExplosion(nextGrid, i, ly, 2, 4);
+                                break;
+                            } else if (lT === 0 && isEmpty(nextGrid, i, ly)) {
+                                nextGrid[i][ly] = { type: 21, color: '#ff0000', life: 1 };
+                            }
+                        }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // Germen infecta madera
+                    if (t === 100) {
+                        let wood = neighbors.find(n => n.t === 6);
+                        if (wood && Math.random() < 0.02) nextGrid[wood.x][wood.y] = { type: 100, color: getTexture(100) };
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    // Fuego (dura más con temperatura ambiente alta, se apaga antes con frío)
+                    if (t === 4) {
+                        cell.life -= coldFactor();
+                        if (cell.life <= 0) {
+                            if (Math.random() < 0.25) nextGrid[i][j] = { type: 30, color: getTexture(30) };
+                            continue;
+                        }
+                        if (Math.random() < 0.3) cell.color = getTexture(4);
+                        if (Math.random() < 0.05 && inBounds(i, j - 1) && grid[i][j - 1].type === 0 && isEmpty(nextGrid, i, j - 1)) {
+                            nextGrid[i][j - 1] = { type: 31, color: getTexture(31), life: 90 };
+                        }
+                        if (inBounds(i, j - 1) && grid[i][j - 1].type === 0 && Math.random() < 0.5) nextGrid[i][j - 1] = cell;
+                        else nextGrid[i][j] = cell;
+                        continue;
+                    }
+
+                    // Agua se congela sola con frío extremo
+                    if (t === 2 && ambientTemp < -5 && Math.random() < 0.01 * coldFactor()) { nextGrid[i][j] = { type: 7, color: getTexture(7) }; continue; }
+
+                    if (t === 7) {
+                        if (tFire || ambientTemp > 45) { nextGrid[i][j] = { type: 2, color: getTexture(2), life: 100 }; continue; }
+                        for (let n of neighbors) if (n.t === 2 && Math.random() < 0.05 * coldFactor()) nextGrid[n.x][n.y] = { type: 7, color: getTexture(7) };
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    if (t === 33 && (tFire || ambientTemp > 35)) { nextGrid[i][j] = { type: 2, color: getTexture(2), life: 100 }; continue; }
+                    if (t === 52 && Math.random() < 0.015 * heatFactor()) { nextGrid[i][j] = { type: 31, color: getTexture(31), life: 90 }; continue; }
+                    if (t === 50 && tFire) { nextGrid[i][j] = Math.random() < 0.5 ? { type: 32, color: getTexture(32), life: 60 } : { type: 0 }; continue; }
+
+                    if (t === 15) {
+                        let dissolved = false;
+                        for (let n of neighbors) {
+                            if (n.t === 2) { nextGrid[n.x][n.y] = { type: 20, color: getTexture(20) }; dissolved = true; }
+                            else if (n.t === 7) { nextGrid[n.x][n.y] = { type: 2, color: getTexture(2) }; }
+                        }
+                        if (dissolved) continue;
+                    }
+
+                    if (t === 19) {
+                        if (neighbors.some(n => n.t === 4) && Math.random() < 0.02) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 30 }; continue; }
+                        else { nextGrid[i][j] = cell; continue; }
+                    }
+
+                    if (t === 6) {
+                        if (tFire && Math.random() < 0.05 * heatFactor()) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 50 }; continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    if (t === 104 && tFire && Math.random() < 0.08 * heatFactor()) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 35 }; continue; }
+
+                    if (PLANTS.includes(t)) {
+                        let hasAbono = neighbors.some(n => n.t === 11);
+                        let hasTierra = neighbors.some(n => n.t === 41);
+                        if (tWater || hasAbono || ((t === 40 || t === 95) && hasTierra)) {
+                            let chance = hasAbono ? 0.3 : (t === 95 ? 0.1 : (t === 40 ? 0.08 : 0.05));
+                            if (Math.random() < chance) {
+                                let sideBias = t === 95 ? 0.6 : 0.3;
+                                let gX = i + (Math.random() < sideBias ? (Math.random() < 0.5 ? -1 : 1) : 0);
+                                let gY = t === 95 ? j : j - 1;
+                                if (inBounds(gX, gY) && grid[gX][gY].type === 0) nextGrid[gX][gY] = { type: t, color: getTexture(t) };
+                            }
+                        }
+                        if (t === 45 && Math.random() < 0.01 && inBounds(i, j - 1) && grid[i][j - 1].type === 0) {
+                            nextGrid[i][j - 1] = { type: 46, color: getTexture(46), life: 100 };
+                        }
+                        if (tFire && Math.random() < 0.1) { nextGrid[i][j] = { type: 4, color: getTexture(4), life: 40 }; continue; }
+                        nextGrid[i][j] = cell; continue;
+                    }
+
+                    if (t === 16 && tFire) { nextGrid[i][j] = { type: 17, color: getTexture(17) }; continue; }
+                    if ((t === 9 || t === 35 || t === 108) && tFire) { triggerExplosion(nextGrid, i, j, t === 35 ? 6 : (t === 108 ? 8 : 4), 4); continue; }
+                    if (t === 116 && tFire) { triggerExplosion(nextGrid, i, j, 6, 4); continue; }
+                    if (t === 81 && tFire) { triggerExplosion(nextGrid, i, j, 5, 4); continue; }
+
+                    if (t === 68 && tWater && Math.random() < 0.05) { nextGrid[i][j] = { type: 93, color: getTexture(93) }; continue; }
+                    if (t === 41 && tWater && Math.random() < 0.04) { nextGrid[i][j] = { type: 34, color: getTexture(34) }; continue; }
+
+                    if (t === 5) {
+                        let touchWater = neighbors.find(n => n.t === 2 || n.t === 20);
+                        if (touchWater && Math.random() < 0.4) {
+                            nextGrid[i][j] = { type: 43, color: getTexture(43) };
+                            nextGrid[touchWater.x][touchWater.y] = { type: 32, color: getTexture(32), life: 80 };
+                            continue;
+                        }
+                        if (Math.random() < 0.15) cell.color = getTexture(5);
+                    }
+                    if (t === 42 && Math.random() < 0.15) { cell.color = getTexture(42); }
+                    if (t === 111 && Math.random() < 0.1) { cell.color = getTexture(111); }
+
+                    if (t === 27) {
+                        let target = neighbors.find(n => DISSOLVABLE.includes(n.t));
+                        if (target && Math.random() < 0.15) { nextGrid[target.x][target.y] = { type: 0 }; }
+                        let glassTarget = neighbors.find(n => n.t === 12);
+                        if (glassTarget && Math.random() < 0.08) nextGrid[glassTarget.x][glassTarget.y] = { type: 107, color: getTexture(107) };
+                    }
+
+                    if (t === 2 && tFire && Math.random() < 0.25) { nextGrid[i][j] = { type: 32, color: getTexture(32), life: 70 }; continue; }
+
+                    if (t === 79 && Math.random() < 0.006) {
+                        for (let ly = j; ly < rows; ly++) {
+                            if (grid[i][ly].type !== 0) break;
+                            if (isEmpty(nextGrid, i, ly)) nextGrid[i][ly] = { type: 10, color: getTexture(10), life: 3 };
+                        }
+                    }
+                    if (t === 83) {
+                        let liq = neighbors.find(n => LIQUIDS.includes(n.t));
+                        if (liq && Math.random() < 0.08) nextGrid[liq.x][liq.y] = { type: 7, color: getTexture(7) };
+                    }
+
+                    if (FUSIONS_BY_A[t]) {
+                        let fused = false;
+                        for (let rule of FUSIONS_BY_A[t]) {
+                            let other = neighbors.find(n => n.t === rule[1]);
+                            if (other && Math.random() < rule[3]) {
+                                if (rule[4] !== undefined) nextGrid[other.x][other.y] = { type: rule[4], color: getTexture(rule[4]) };
+                                if (rule[2] !== null) { nextGrid[i][j] = { type: rule[2], color: getTexture(rule[2]) }; fused = true; }
+                                break;
+                            }
+                        }
+                        if (fused) continue;
+                    }
+
+                    if (GASES.includes(t)) {
+                        if (DISSIPATING_GASES.includes(t)) {
+                            cell.life--;
+                            if (cell.life <= 0) continue;
+                        }
+                        let d = Math.random() < 0.5 ? -1 : 1;
+                        let riseSpeed = (t === 14 || t === 32) ? 2 : 1;
+                        let u = j - riseSpeed;
+                        if (u >= 0) {
+                            if (isEmpty(grid, i, u) && isEmpty(nextGrid, i, u)) nextGrid[i][u] = cell;
+                            else if (isEmpty(grid, i + d, u) && isEmpty(nextGrid, i + d, u)) nextGrid[i + d][u] = cell;
+                            else nextGrid[i][j] = cell;
+                        } else { nextGrid[i][j] = cell; }
+                        continue;
+                    }
+
+                    if (POWDERS.includes(t)) {
+                        let bY = j + 1;
+                        if (bY < rows) {
+                            let bT = grid[i][bY].type;
+                            if (bT === 0 && isEmpty(nextGrid, i, bY)) { nextGrid[i][bY] = cell; }
+                            else if (LIQUIDS.includes(bT)) { nextGrid[i][bY] = cell; nextGrid[i][j] = grid[i][bY]; }
+                            else {
+                                let slop = (t === 18) ? 0.1 : 1.0;
+                                if (Math.random() <= slop) {
+                                    let cL = isEmpty(grid, i - 1, bY) && isEmpty(nextGrid, i - 1, bY);
+                                    let cR = isEmpty(grid, i + 1, bY) && isEmpty(nextGrid, i + 1, bY);
+                                    if (cL && cR) nextGrid[i + (Math.random() < 0.5 ? -1 : 1)][bY] = cell;
+                                    else if (cL) nextGrid[i - 1][bY] = cell;
+                                    else if (cR) nextGrid[i + 1][bY] = cell;
+                                    else nextGrid[i][j] = cell;
+                                } else { nextGrid[i][j] = cell; }
+                            }
+                        } else { nextGrid[i][j] = cell; }
+                        continue;
+                    }
+
+                    if (LIQUIDS.includes(t)) {
+                        let bY = j + 1;
+                        if (bY < rows) {
+                            let bT = grid[i][bY].type;
+                            if (bT === 0 && isEmpty(nextGrid, i, bY)) nextGrid[i][bY] = cell;
+                            else {
+                                let d = Math.random() < 0.5 ? 1 : -1; let m = false;
+                                let flow = VISCOUS_LIQUIDS.includes(t) ? 1 : 4;
+                                for (let s = 1; s <= flow; s++) {
+                                    if (isEmpty(grid, i + (d * s), j) && isEmpty(nextGrid, i + (d * s), j)) { nextGrid[i + (d * s)][j] = cell; m = true; break; }
+                                }
+                                if (!m) {
+                                    d = -d;
+                                    for (let s = 1; s <= flow; s++) {
+                                        if (isEmpty(grid, i + (d * s), j) && isEmpty(nextGrid, i + (d * s), j)) { nextGrid[i + (d * s)][j] = cell; m = true; break; }
+                                    }
+                                }
+                                if (!m) nextGrid[i][j] = cell;
+                            }
+                        } else { nextGrid[i][j] = cell; }
+                    }
+                }
+            }
+            grid = nextGrid;
+        }
+
+        function updateTornadoes() {
+            for (let ti = tornadoes.length - 1; ti >= 0; ti--) {
+                let tor = tornadoes[ti];
+                tor.life--;
+                tor.x += tor.vx; tor.y += Math.sin(tor.life * 0.1) * 0.3;
+                if (tor.life <= 0 || tor.x < -5 || tor.x > cols + 5) { tornadoes.splice(ti, 1); continue; }
+
+                let px = tor.x * cellSize; let py = tor.y * cellSize;
+                for (let a = 0; a < 10; a++) {
+                    let ang = (Date.now() / 90) + a * (Math.PI / 5);
+                    let dist = tor.radius * cellSize * (0.25 + 0.75 * Math.random());
+                    let dx = px + Math.cos(ang) * dist; let dy = py + Math.sin(ang) * dist * 1.6;
+                    ctx.fillStyle = Math.random() < 0.5 ? '#dddddd' : '#8899aa';
+                    ctx.fillRect(dx, dy, cellSize, cellSize);
+                }
+
+                let r = tor.radius;
+                for (let cx = Math.floor(tor.x - r); cx <= Math.floor(tor.x + r); cx++) {
+                    for (let cy = Math.floor(tor.y - r); cy <= Math.floor(tor.y + r); cy++) {
+                        if (inBounds(cx, cy) && grid[cx][cy].type !== 0 && !IMMUNE_SOLIDS.includes(grid[cx][cy].type)) {
+                            let dist = Math.hypot(cx - tor.x, cy - tor.y);
+                            if (dist <= r && Math.random() < 0.35) {
+                                let nx = cx + (Math.random() < 0.5 ? -1 : 1);
+                                let ny = cy - 1;
+                                if (inBounds(nx, ny) && grid[nx][ny].type === 0) { grid[nx][ny] = grid[cx][cy]; grid[cx][cy] = { type: 0 }; }
+                            }
+                        }
+                    }
+                }
+
+                if (player.active) {
+                    let pdx = (player.x + player.width / 2) - tor.x;
+                    let pdy = (player.y + player.height / 2) - tor.y;
+                    if (Math.hypot(pdx, pdy) < r + 2) {
+                        applyHazardDamage('tornado', 2.5);
+                        player.vx += (Math.random() - 0.5) * 2.5;
+                        player.vy -= 0.8;
+                    }
+                }
+            }
+        }
+
+        function updateMeteors() {
+            for (let mi = meteors.length - 1; mi >= 0; mi--) {
+                let m = meteors[mi];
+                m.vy += 0.15; m.y += m.vy;
+                let gx = Math.floor(m.x), gy = Math.floor(m.y);
+
+                ctx.fillStyle = Math.random() < 0.5 ? '#ff6600' : '#993300';
+                ctx.fillRect(gx * cellSize - 3, gy * cellSize - 3, cellSize + 6, cellSize + 6);
+                ctx.fillStyle = 'rgba(255,150,0,0.35)';
+                ctx.fillRect(gx * cellSize - 6, (gy - 3) * cellSize, cellSize + 12, cellSize * 4);
+
+                let hitPlayer = false;
+                if (player.active) {
+                    let pdx = (player.x + player.width / 2) - gx, pdy = (player.y + player.height / 2) - gy;
+                    if (Math.hypot(pdx, pdy) < 3) hitPlayer = true;
+                }
+
+                if (gy >= rows - 1 || (inBounds(gx, gy + 1) && grid[gx][gy + 1].type !== 0) || hitPlayer) {
+                    explodeAt(gx, gy, 14, 4);
+                    meteors.splice(mi, 1);
+                }
+            }
+        }
+
+        function updatePlayer() {
+            if (!player.active || player.hp <= 0) return;
+
+            let inQuicksand = false;
+            let checkX = Math.floor(player.x + player.width / 2);
+            let checkY = Math.floor(player.y + player.height - 1);
+
+            if (inBounds(checkX, checkY)) {
+                let gt = grid[checkX][checkY].type;
+                if (gt === 18) inQuicksand = true;
+                if (HAZARD_BURN.includes(gt)) { applyHazardDamage('fire', 1.3); player.onFire = 30; }
+                else if (HAZARD_POISON.includes(gt)) { applyHazardDamage('poison', 0.4); }
+                else if (gt === 74) { player.hp = Math.min(100, player.hp + 0.6); }
+                if ((gt === 2 || gt === 20) && !player.wasInWater) { sfx.splash(); }
+                player.wasInWater = (gt === 2 || gt === 20);
+            }
+
+            if (player.onFire > 0) player.onFire--;
+
+            let speed = inQuicksand ? 0.3 : 1.5;
+            if (keys['a']) player.vx = -speed;
+            else if (keys['d']) player.vx = speed;
+            else player.vx *= 0.8;
+
+            player.x += player.vx;
+            if (player.x < 0) player.x = 0;
+            if (player.x > cols - player.width) player.x = cols - player.width;
+
+            player.vy += inQuicksand ? 0.05 : 0.3;
+            if (inQuicksand && player.vy > 1) player.vy = 1;
+
+            player.y += player.vy;
+            player.grounded = false;
+
+            let feetY = Math.floor(player.y + player.height);
+            let centerFeetX = Math.floor(player.x + player.width / 2);
+
+            if (feetY >= rows) {
+                player.y = rows - player.height; player.vy = 0; player.grounded = true;
+            } else if (inBounds(centerFeetX, feetY)) {
+                let footTile = grid[centerFeetX][feetY].type;
+                if (footTile !== 0 && ![4, 13, 14, 18, 21, 31, 32, 46, 48, 80].includes(footTile)) {
+                    if (inBounds(centerFeetX, feetY - 1) && grid[centerFeetX][feetY - 1].type === 0) {
+                        player.y = feetY - player.height; player.vy = 0; player.grounded = true;
+                    } else {
+                        player.y -= 1; player.vy = 0;
+                    }
+                }
+            }
+
+            if (keys['w'] && player.grounded && !inQuicksand) { player.vy = -3.5; player.grounded = false; }
+            if (player.grounded && Math.abs(player.vx) > 0.3) {
+                player.stepTimer = (player.stepTimer || 0) + 1;
+                if (player.stepTimer > 9) { sfx.footstep(); player.stepTimer = 0; }
+            }
+            if (player.hp <= 0) killPlayer();
+        }
+
+        // ===================== STICKMAN CON HUESOS Y SANGRE =====================
+        function drawLimb(x1, y1, x2, y2, color, showBone) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            if (showBone) {
+                ctx.strokeStyle = 'rgba(240,230,210,0.85)';
+                ctx.lineWidth = 0.9;
+                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            }
+        }
+
+        function drawStump(x, y) {
+            ctx.fillStyle = '#8a0303';
+            ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#f0e6d2'; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.moveTo(x - 1.5, y); ctx.lineTo(x + 1.5, y); ctx.stroke();
+        }
+
+        // Paleta fija: negro, blanco, rojo, amarillo
+        const PJ_BLACK = '#000000', PJ_WHITE = '#ffffff', PJ_RED = '#ff1a1a', PJ_YELLOW = '#ffe600';
+
+        function roundRectPath(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function drawStickman() {
+            if (!player.active || !player.parts) return;
+            let bx = Math.round(player.x * cellSize) + 4; let by = Math.round(player.y * cellSize);
+            let s = cellSize;
+            let walking = Math.abs(player.vx) > 0.15 && player.grounded;
+            let step = walking ? Math.sin(Date.now() / 110) * s * 0.5 : 0;
+            let hurt = player.hp < 45;
+            let onFire = player.onFire > 0;
+            let bodyColor = onFire ? PJ_RED : PJ_WHITE;
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+            // Piernas en arco (como stickman de referencia: sin pies separados, solo el arco blanco)
+            let hipY = by + s * 3.2, footY = by + s * 6.2, spread = s * 1.6;
+            if (player.parts.legL.attached && player.parts.legR.attached) {
+                ctx.strokeStyle = bodyColor; ctx.lineWidth = s * 0.9;
+                ctx.beginPath();
+                ctx.moveTo(bx - spread * 0.15 + step, hipY);
+                ctx.lineTo(bx - spread + step * 0.5, footY);
+                ctx.quadraticCurveTo(bx, footY + s * 1.1, bx + spread - step * 0.5, footY);
+                ctx.lineTo(bx + spread * 1.15 - step, hipY);
+                ctx.stroke();
+                if (hurt) { ctx.strokeStyle = 'rgba(255,26,26,0.5)'; ctx.lineWidth = s * 0.3; ctx.stroke(); }
+            } else if (player.parts.legL.attached) {
+                ctx.strokeStyle = bodyColor; ctx.lineWidth = s * 0.9;
+                ctx.beginPath(); ctx.moveTo(bx, hipY); ctx.lineTo(bx - spread * 0.5 + step, footY); ctx.stroke();
+                drawStump(bx + spread * 0.5, hipY);
+            } else if (player.parts.legR.attached) {
+                ctx.strokeStyle = bodyColor; ctx.lineWidth = s * 0.9;
+                ctx.beginPath(); ctx.moveTo(bx, hipY); ctx.lineTo(bx + spread * 0.5 - step, footY); ctx.stroke();
+                drawStump(bx - spread * 0.5, hipY);
+            } else {
+                drawStump(bx, hipY);
+            }
+
+            // Cuerpo (blanco liso)
+            if (player.parts.torso.attached) {
+                ctx.fillStyle = bodyColor;
+                ctx.fillRect(bx - s * 0.9, by + s * 0.6, s * 1.8, s * 2.8);
+                if (hurt) { ctx.fillStyle = 'rgba(255,26,26,0.4)'; ctx.fillRect(bx - s * 0.9, by + s * 0.6, s * 1.8, s * 2.8); }
+            } else {
+                drawStump(bx, by + s * 1.5);
+            }
+
+            // Cabeza redondeada blanca con ojos que miran al cursor
+            if (player.parts.head.attached) {
+                ctx.fillStyle = bodyColor;
+                roundRectPath(bx - s * 1.1, by - s * 2.1, s * 2.2, s * 2.7, s * 0.5);
+                ctx.fill();
+                ctx.strokeStyle = PJ_BLACK; ctx.lineWidth = 1; ctx.stroke();
+                let lookDir = (lastMouseGX * cellSize > bx) ? 1 : -1;
+                ctx.fillStyle = PJ_BLACK;
+                ctx.fillRect(bx - s * 0.1 + lookDir * s * 0.5, by - s * 1.0, s * 0.5, s * 0.5);
+            } else {
+                drawStump(bx, by - s * 0.8);
+            }
+
+            if (onFire) {
+                ctx.fillStyle = Math.random() < 0.5 ? PJ_YELLOW : PJ_RED;
+                ctx.fillRect(bx - s, by - s * 2.6, s * 0.8, s * 0.8);
+                ctx.fillRect(bx + s, by - s * 3.2, s * 0.8, s * 0.8);
+            }
+
+            // Nombre
+            ctx.font = '7px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = myColor;
+            ctx.fillText(playerName, bx + s * 0.4, by - s * 2.4);
+            ctx.textAlign = 'left';
+
+            // Barra de vida
+            ctx.fillStyle = PJ_RED; ctx.fillRect(bx - 10, by - s * 3.2, 20, 3);
+            ctx.fillStyle = '#22cc22'; ctx.fillRect(bx - 10, by - s * 3.2, 20 * (player.hp / 100), 3);
+        }
+
+        function drawCursor() {
+            let cx = lastMouseGX * cellSize, cy = lastMouseGY * cellSize;
+            ctx.strokeStyle = myColor; ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy);
+            ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy + 6);
+            ctx.stroke();
+        }
+
+        function draw() {
+            if (shake > 0) {
+                canvas.style.transform = `translate(${(Math.random() - 0.5) * shake}px, ${(Math.random() - 0.5) * shake}px)`;
+                shake *= 0.9; if (shake < 0.5) shake = 0;
+            } else { canvas.style.transform = `translate(0px, 0px)`; }
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#020205';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            updateRain();
+            updateThunder();
+            updateGrid();
+            updatePlayer();
+            updateGibs();
+            updateCreatures();
+
+            let glowPoints = [];
+            const TRANSPARENT_LIQUIDS = [2, 20, 74, 112, 187, 76, 188];
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    let t = grid[i][j].type;
+                    if (t !== 0) {
+                        ctx.fillStyle = grid[i][j].color;
+                        if (TRANSPARENT_LIQUIDS.includes(t)) {
+                            ctx.globalAlpha = 0.68;
+                            ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+                            ctx.globalAlpha = 1;
+                        } else {
+                            ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+                        }
+                        if (GLOW_TYPES.includes(t) && Math.random() < 0.12) glowPoints.push({ x: i, y: j, type: t });
+                    }
+                }
+            }
+
+            for (let i = blackHoles.length - 1; i >= 0; i--) {
+                let bh = blackHoles[i];
+                bh.timer++;
+                let px = bh.x * cellSize; let py = bh.y * cellSize;
+
+                if (bh.phase === 'sun') {
+                    bh.y -= 0.05; bh.radius += 0.1;
+                    ctx.beginPath(); ctx.arc(px, py, bh.radius * cellSize, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fffacd'; ctx.fill();
+                    glowPoints.push({ x: bh.x, y: bh.y, type: 'sun', r: bh.radius });
+                    if (bh.timer > 100) { bh.phase = 'boom'; bh.timer = 0; shake = 50; }
+                } else if (bh.phase === 'boom') {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${1 - bh.timer / 20})`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    if (bh.timer > 20) { bh.phase = 'hole'; bh.timer = 0; bh.radius = 2; }
+                } else if (bh.phase === 'hole') {
+                    for (let a = 0; a < 5; a++) {
+                        let ang = (Date.now() / 200) + (a * Math.PI / 2.5);
+                        let dist = bh.radius * cellSize + (Math.random() * 20);
+                        let dx = px + Math.cos(ang) * dist; let dy = py + Math.sin(ang) * dist;
+                        ctx.fillStyle = Math.random() > 0.5 ? '#ff5500' : '#aa00ff';
+                        ctx.fillRect(dx, dy, cellSize, cellSize);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
+                        ctx.beginPath(); ctx.arc(px, py, dist, ang, ang + 0.5); ctx.stroke();
+                    }
+
+                    ctx.beginPath(); ctx.arc(px, py, bh.radius * cellSize, 0, Math.PI * 2);
+                    ctx.fillStyle = '#000'; ctx.fill();
+                    glowPoints.push({ x: bh.x, y: bh.y, type: 'hole', r: bh.radius });
+
+                    let pull = Math.floor(bh.radius) + 5;
+                    for (let cx = Math.floor(bh.x - pull); cx <= Math.floor(bh.x + pull); cx++) {
+                        for (let cy = Math.floor(bh.y - pull); cy <= Math.floor(bh.y + pull); cy++) {
+                            if (inBounds(cx, cy)) {
+                                let dist = Math.sqrt(Math.pow(cx - bh.x, 2) + Math.pow(cy - bh.y, 2));
+                                if (dist <= bh.radius && grid[cx][cy].type !== 0) {
+                                    grid[cx][cy] = { type: 0 }; bh.radius += 0.01;
+                                } else if (dist <= pull && grid[cx][cy].type !== 0 && Math.random() < 0.2) {
+                                    let nextX = cx + (bh.x > cx ? 1 : (bh.x < cx ? -1 : 0));
+                                    let nextY = cy + (bh.y > cy ? 1 : (bh.y < cy ? -1 : 0));
+                                    if (inBounds(nextX, nextY) && grid[nextX][nextY].type === 0) {
+                                        grid[nextX][nextY] = grid[cx][cy]; grid[cx][cy] = { type: 0 };
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (player.active) {
+                        let pdx = (player.x + player.width / 2) - bh.x; let pdy = (player.y + player.height / 2) - bh.y;
+                        if (Math.hypot(pdx, pdy) < bh.radius + 4) applyHazardDamage('blackhole', 4);
+                    }
+
+                    if (bh.radius * cellSize > canvas.width / 1.5) {
+                        flashScreen.style.opacity = 1; flashScreen.style.transition = "opacity 0.1s";
+                        setTimeout(() => {
+                            grid = createGrid(); blackHoles = []; tornadoes = []; meteors = []; gibs = []; creatures = [];
+                            player.active = false;
+                            flashScreen.style.transition = "opacity 2s"; flashScreen.style.opacity = 0;
+                        }, 100);
+                    }
+                }
+            }
+
+            updateTornadoes();
+            updateMeteors();
+            updateRockets();
+            updateAlienInvasion();
+            updateHelicopter();
+
+            ctx.globalCompositeOperation = 'screen';
+            for (let p of glowPoints) {
+                let rx = p.x * cellSize; let ry = p.y * cellSize;
+                let size = p.r ? (p.r * cellSize * 4) : (cellSize * 5);
+                let rad = ctx.createRadialGradient(rx, ry, 0, rx, ry, size);
+
+                if ([4, 5, 21, 42, 111].includes(p.type)) rad.addColorStop(0, 'rgba(255, 100, 0, 0.4)');
+                else if (p.type === 13) rad.addColorStop(0, 'rgba(255, 0, 85, 0.4)');
+                else if (p.type === 10) rad.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                else if (p.type === 54) rad.addColorStop(0, 'rgba(0, 255, 255, 0.5)');
+                else if (p.type === 47 || p.type === 112) rad.addColorStop(0, 'rgba(57, 255, 20, 0.45)');
+                else if (p.type === 44) rad.addColorStop(0, 'rgba(119, 0, 255, 0.5)');
+                else if (p.type === 79 || p.type === 92) rad.addColorStop(0, 'rgba(180, 180, 220, 0.3)');
+                else if (p.type === 115) rad.addColorStop(0, 'rgba(220, 190, 255, 0.4)');
+                else if (p.type === 'sun') rad.addColorStop(0, 'rgba(255, 200, 50, 0.8)');
+                else if (p.type === 'hole') rad.addColorStop(0, 'rgba(138, 43, 226, 0.6)');
+                rad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = rad;
+                ctx.fillRect(rx - size, ry - size, size * 2, size * 2);
+            }
+
+            ctx.globalCompositeOperation = 'source-over';
+            drawTemperatureOverlay();
+            drawDayNight();
+            drawGibs();
+            drawCreatures();
+            drawStickman();
+            drawCursor();
+
+            requestAnimationFrame(draw);
+        }
+
+        // ===================== FÍSICA EXAGERADA =====================
+        const physicsBtn = document.getElementById('physicsToggle');
+        physicsBtn.onclick = function () {
+            exaggeratedPhysics = !exaggeratedPhysics;
+            physicsBtn.textContent = 'FÍSICA EXAGERADA: ' + (exaggeratedPhysics ? 'ON' : 'OFF');
+            physicsBtn.classList.toggle('on', exaggeratedPhysics);
+        };
+
+        // ===================== TEMPERATURA GLOBAL (afecta reacciones reales) =====================
+        const tempSlider = document.getElementById('tempSlider');
+        const tempValueSpan = document.getElementById('tempValue');
+        tempSlider.oninput = function () {
+            ambientTemp = parseFloat(this.value);
+            tempValueSpan.textContent = ambientTemp + '°C';
+            tempValueSpan.style.color = ambientTemp > 60 ? '#ff5533' : (ambientTemp < 0 ? '#66ccff' : '#ffeb3b');
+        };
+        document.getElementById('timeSlider').oninput = function () { dayTime = parseFloat(this.value); };
+        document.getElementById('volcanoHeightInput').oninput = function () { volcanoHeight = parseInt(this.value) || 15; };
+
+        // multiplicador de reacciones térmicas según la temperatura ambiente (frío frena, calor acelera)
+        function heatFactor() { return Math.max(0.15, Math.min(3.5, 1 + (ambientTemp - 20) / 45)); }
+        function coldFactor() { return Math.max(0.15, Math.min(3.5, 1 - (ambientTemp - 20) / 45)); }
+
+        function drawTemperatureOverlay() {
+            ctx.globalCompositeOperation = 'source-over';
+            if (ambientTemp > 20) { ctx.fillStyle = `rgba(255,60,0,${Math.min(0.12, (ambientTemp - 20) / 500)})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            else if (ambientTemp < 20) { ctx.fillStyle = `rgba(0,140,255,${Math.min(0.14, (20 - ambientTemp) / 200)})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            for (let i = 0; i < cols; i += 2) {
+                for (let j = 0; j < rows; j += 2) {
+                    let tt = grid[i][j].type;
+                    if (tt === 5 || tt === 42 || HAZARD_BURN.includes(tt)) { ctx.fillStyle = 'rgba(255,60,0,0.09)'; ctx.fillRect(i * cellSize - 8, j * cellSize - 8, 16, 16); }
+                    else if ([7, 33, 52, 91, 83].includes(tt)) { ctx.fillStyle = 'rgba(0,140,255,0.09)'; ctx.fillRect(i * cellSize - 8, j * cellSize - 8, 16, 16); }
+                }
+            }
+        }
+
+
+        function drawDayNight() {
+            let darkness = 0;
+            if (dayTime < 6) darkness = (6 - dayTime) / 6 * 0.65;
+            else if (dayTime > 18) darkness = (dayTime - 18) / 6 * 0.65;
+            if (darkness > 0) {
+                ctx.fillStyle = `rgba(0,0,35,${darkness})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // ===================== LLUVIA / TRUENOS =====================
+        const rainBtn = document.getElementById('rainToggle');
+        rainBtn.onclick = function () {
+            rainActive = !rainActive;
+            rainBtn.textContent = 'LLUVIA: ' + (rainActive ? 'ON' : 'OFF');
+            rainBtn.classList.toggle('on', rainActive);
+        };
+        const thunderBtn = document.getElementById('thunderToggle');
+        thunderBtn.onclick = function () {
+            thunderActive = !thunderActive;
+            thunderBtn.textContent = 'TRUENOS: ' + (thunderActive ? 'ON' : 'OFF');
+            thunderBtn.classList.toggle('on', thunderActive);
+        };
+
+        function updateRain() {
+            if (!rainActive) return;
+            for (let n = 0; n < 4; n++) {
+                let rx = Math.floor(Math.random() * cols);
+                if (grid[rx][0].type === 0) grid[rx][0] = { type: 2, color: getTexture(2), life: 100 };
+            }
+        }
+
+        function updateThunder() {
+            if (!thunderActive) return;
+            if (Math.random() < 0.02) {
+                let rx = Math.floor(Math.random() * cols);
+                drawLightning(rx, 0, 10);
+            }
+        }
+
+        // ===================== BOMBA NUCLEAR =====================
+        document.getElementById('nukeBtn').onclick = function () { triggerNuke(); };
+
+        function triggerNuke() {
+            let cx = Math.floor(Math.random() * (cols - 40)) + 20, cy = Math.floor(rows * 0.55);
+            explodeAt(cx, cy, 42, 4);
+            for (let s = 0; s < 160; s++) {
+                let sx = cx + Math.floor((Math.random() - 0.5) * 75);
+                let sy = cy + Math.floor((Math.random() - 0.5) * 45);
+                if (inBounds(sx, sy) && grid[sx][sy].type === 0 && Math.random() < 0.4) grid[sx][sy] = { type: 47, color: getTexture(47), life: 320 };
+            }
+            flashScreen.style.opacity = 1; flashScreen.style.transition = 'opacity 0.05s';
+            setTimeout(() => { flashScreen.style.transition = 'opacity 3s'; flashScreen.style.opacity = 0; }, 80);
+            shake = 70;
+        }
+
+        // ===================== INVASIÓN ALIEN =====================
+        let alienActive = false;
+        let alienShip = { x: cols / 2, dir: 1 };
+        const alienBtn = document.getElementById('alienToggle');
+        alienBtn.onclick = function () {
+            alienActive = !alienActive;
+            alienBtn.textContent = '👽 INVASIÓN ALIEN: ' + (alienActive ? 'ON' : 'OFF');
+            alienBtn.classList.toggle('on', alienActive);
+        };
+        function updateAlienInvasion() {
+            if (!alienActive) return;
+            alienShip.x += alienShip.dir * 0.25;
+            if (alienShip.x < 12 || alienShip.x > cols - 12) alienShip.dir *= -1;
+            let px = alienShip.x * cellSize, py = 18;
+            ctx.fillStyle = '#3a3a5a';
+            ctx.fillRect(px - 32, py, 64, 10);
+            ctx.fillStyle = '#7fffd4';
+            ctx.fillRect(px - 10, py - 7, 20, 9);
+            ctx.fillStyle = 'rgba(127,255,212,0.25)';
+            ctx.fillRect(px - 40, py + 10, 80, 260);
+            if (Math.random() < 0.02) {
+                let lx = Math.floor(alienShip.x + (Math.random() - 0.5) * 20);
+                sfx.laser();
+                for (let ly = Math.floor(py / cellSize); ly < rows; ly++) {
+                    if (!inBounds(lx, ly)) break;
+                    if (grid[lx][ly].type === 0) grid[lx][ly] = { type: 21, color: '#00ff44', life: 2 };
+                    else { explodeAt(lx, ly, 3, 4); break; }
+                }
+            }
+        }
+
+        // ===================== HELICÓPTERO BOMBARDERO =====================
+        let helicopterActive = false;
+        let heli = { x: 10, dir: 1 };
+        const heliBtn = document.getElementById('heliToggle');
+        heliBtn.onclick = function () {
+            helicopterActive = !helicopterActive;
+            heliBtn.textContent = '🚁 HELICÓPTERO: ' + (helicopterActive ? 'ON' : 'OFF');
+            heliBtn.classList.toggle('on', helicopterActive);
+        };
+        function updateHelicopter() {
+            if (!helicopterActive) return;
+            heli.x += heli.dir * 0.35;
+            if (heli.x < 6 || heli.x > cols - 6) heli.dir *= -1;
+            let px = heli.x * cellSize, py = 14;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(px - 16, py, 32, 9);
+            ctx.fillRect(px - 3, py - 7, 6, 9);
+            ctx.strokeStyle = 'rgba(200,200,200,0.6)'; ctx.lineWidth = 1;
+            let rotor = Math.sin(Date.now() / 30) * 22;
+            ctx.beginPath(); ctx.moveTo(px - rotor, py - 7); ctx.lineTo(px + rotor, py - 7); ctx.stroke();
+            if (Math.random() < 0.012) { meteors.push({ x: heli.x, y: py / cellSize, vy: 1 }); }
+        }
+
+        draw();
+    </script>
+</body>
+</html>
